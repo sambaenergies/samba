@@ -44,6 +44,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import ValidationError
 
+from samba.run_result.contracts import KpiSummary, SizingRow
 from samba_service import jobs as _jobs
 from samba_service._contract import API_VERSION, CAPABILITIES, CONTRACT_VERSION
 from samba_service.auth import verify_api_key
@@ -211,6 +212,36 @@ def _artifact_list(run_dir: Path) -> list[str]:
     return sorted(f.name for f in run_dir.iterdir() if f.is_file() and f.name in _ALLOWED_ARTIFACTS)
 
 
+def _coerce_kpis(run_id: str, raw: dict[str, Any] | None) -> KpiSummary | None:
+    """Validate stored KPIs against the contract, degrading a bad row to None.
+
+    Coerce-or-degrade is uniform: a row whose stored KPIs no longer match
+    ``KpiSummary`` (e.g. a persisted legacy row from before a contract change)
+    is logged and dropped to ``None`` rather than raising, so one bad row can
+    never break the whole ``GET /jobs`` list. Live solver output is separately
+    and loudly gated against the contract by ``test_artifact_contracts.py``, so
+    a genuinely malformed *fresh* result is caught there, not silently shipped.
+    """
+    if raw is None:
+        return None
+    try:
+        return KpiSummary.model_validate(raw)
+    except ValidationError:
+        log.warning("Job %s: stored kpis no longer match KpiSummary; degrading to null.", run_id)
+        return None
+
+
+def _coerce_sizing(run_id: str, raw: list[dict[str, Any]] | None) -> list[SizingRow] | None:
+    """Validate stored sizing rows against the contract; degrade the field on failure."""
+    if raw is None:
+        return None
+    try:
+        return [SizingRow.model_validate(row) for row in raw]
+    except ValidationError:
+        log.warning("Job %s: stored sizing no longer match SizingRow; degrading to null.", run_id)
+        return None
+
+
 def _job_to_response(job: Job) -> JobStatusResponse:
     """Build a :class:'JobStatusResponse' from a :class:'~samba_service.jobs.Job'."""
     artifacts: list[str] = []
@@ -222,8 +253,8 @@ def _job_to_response(job: Job) -> JobStatusResponse:
         submitted_at=job.submitted_at,
         started_at=job.started_at,
         completed_at=job.completed_at,
-        kpis=job.kpis,
-        sizing=job.sizing,
+        kpis=_coerce_kpis(job.run_id, job.kpis),
+        sizing=_coerce_sizing(job.run_id, job.sizing),
         artifacts=artifacts,
         error=job.error,
         solve_time_s=job.solve_time_s,
