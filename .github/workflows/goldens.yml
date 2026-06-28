@@ -20,10 +20,10 @@ jobs:
         python-version: ["3.11", "3.12"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v8.2.0
         with:
           enable-cache: true
           python-version: "${{ matrix.python-version }}"
@@ -36,7 +36,7 @@ jobs:
 
       - name: Upload golden output on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: golden-failure-py${{ matrix.python-version }}
           path: tests/goldens/**/output/
