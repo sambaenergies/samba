@@ -252,13 +252,23 @@ class TestErrorContractV2:
         for (path, method), op_id in self._EXPECTED_OPERATION_IDS.items():
             assert paths[path][method]["operationId"] == op_id
 
-    def test_protected_routes_document_error_envelope(self, client: TestClient) -> None:
-        spec = client.get("/openapi.json").json()
-        responses = spec["paths"]["/api/v1/jobs"]["post"]["responses"]
-        for code in ("400", "401", "404", "409", "422", "500"):
-            assert code in responses, f"submitJob missing documented {code}"
+    def test_every_route_documents_error_envelope(self, client: TestClient) -> None:
+        """Every protected route documents the 6 error codes; /health documents 500.
+
+        All non-2xx bodies must reference the shared ErrorResponse model.
+        """
+        paths = client.get("/openapi.json").json()["paths"]
+
+        def assert_error_ref(responses: dict, code: str, op: str) -> None:
+            assert code in responses, f"{op} missing documented {code}"
             ref = responses[code]["content"]["application/json"]["schema"]["$ref"]
-            assert ref.endswith("/ErrorResponse")
+            assert ref.endswith("/ErrorResponse"), f"{op} {code} is not ErrorResponse"
+
+        for (path, method), op_id in self._EXPECTED_OPERATION_IDS.items():
+            responses = paths[path][method]["responses"]
+            codes = ("500",) if path == "/health" else ("400", "401", "404", "409", "422", "500")
+            for code in codes:
+                assert_error_ref(responses, code, op_id)
 
     def test_validate_200_and_submit_422_share_error_lines(self, client: TestClient) -> None:
         """The same malformed scenario yields a byte-identical errors[] list."""
