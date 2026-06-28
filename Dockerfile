@@ -5,7 +5,7 @@
 #
 # The container runs the FastAPI service (samba_service.app:app) with the
 # SQLite-backed persistent job store enabled, writing results under /data.
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 # uv from the official distroless image.
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
