@@ -105,7 +105,7 @@ app = FastAPI(
     version=API_VERSION,
     description=(
         "Microgrid optimisation REST API wrapping the SAMBA core library.\n\n"
-        "**v2 features:** async job queue, artifact downloads, CORS, optional API key auth.\n\n"
+        "**Features:** async job queue, artifact downloads, CORS, optional API key auth.\n\n"
         "**Security notice:** when ''SAMBA_API_KEY'' is unset, no authentication is enforced. "
         "For trusted / local use only unless an auth proxy is in front."
     ),
@@ -185,7 +185,10 @@ def _job_to_response(job: Job) -> JobStatusResponse:
     "/health",
     response_model=HealthResponse,
     summary="Service health check",
-    description="Returns service status, SAMBA version, solver availability, and active job count.",
+    description=(
+        "Returns service status, samba-core version, API/contract version, advertised "
+        "capabilities, solver availability, and active job count."
+    ),
     tags=["meta"],
 )
 def health() -> HealthResponse:
