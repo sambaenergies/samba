@@ -1,0 +1,126 @@
+{
+  "scenario": "g18_full_coupled_pv_hp_gas",
+  "description": "Full integration scenario: PV + Battery + Grid + HP (both) + Thermal Storage + Gas Boiler backup. LP sizes PV and invests in thermal storage; gas unused due to cheap PV+HP combination.",
+  "source": "samba_lp",
+  "samba_version": "3.0.0",
+  "run_date": "2026-03-03",
+  "notes": "LP sizes PV~2.2 kW, no battery. Thermal storage invested (~479 USD capex). Gas boiler installed as backup but unused (annual_gas_consumption=0). Invariant: renewable_fraction>0.25, gas_unused.",
+  "kpis": {
+    "npc": 26867.5105,
+    "lcoe": 0.259621,
+    "pv_kw": 1.8893,
+    "battery_kwh": 0.0,
+    "inverter_kw": 1.4843,
+    "annual_pv_kwh": 3142.962,
+    "renewable_fraction": 0.271854,
+    "annual_diesel_l": 0.0,
+    "annual_heat_produced_kwh": 16231.3523,
+    "annual_cool_produced_kwh": 147.4737,
+    "mean_cop_heating": 5.0439,
+    "mean_cop_cooling": 5.4723,
+    "annual_heating_demand_kwh_th": 15965.4,
+    "annual_cooling_demand_kwh_th": 147.4737,
+    "annual_hp_elec_kwh": 3389.0649,
+    "annual_gas_consumption_kwh_th": 0.0,
+    "thermal_storage_capex": 501.65,
+    "gas_boiler_capex": 2000.0,
+    "gas_boiler_npc": 3368.5202
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "pv_kw": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110% sizing"
+    },
+    "battery_kwh": {
+      "type": "absolute",
+      "value": 0.5,
+      "note": "near-zero battery"
+    },
+    "inverter_kw": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110% sizing"
+    },
+    "annual_pv_kwh": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.05,
+      "note": "\u00b15 pp"
+    },
+    "annual_diesel_l": {
+      "type": "absolute",
+      "value": 1.0,
+      "note": "zero \u2014 no DG"
+    },
+    "annual_heat_produced_kwh": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "annual_cool_produced_kwh": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110% \u2014 small value"
+    },
+    "mean_cop_heating": {
+      "type": "relative",
+      "value": 0.03,
+      "note": "\u00b13%"
+    },
+    "mean_cop_cooling": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15% \u2014 small cooling load"
+    },
+    "annual_heating_demand_kwh_th": {
+      "type": "relative",
+      "value": 0.02,
+      "note": "\u00b12%"
+    },
+    "annual_cooling_demand_kwh_th": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110% \u2014 small value"
+    },
+    "annual_hp_elec_kwh": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "annual_gas_consumption_kwh_th": {
+      "type": "absolute",
+      "value": 100.0,
+      "note": "near-zero \u2014 gas unused when PV+HP is cheaper"
+    },
+    "thermal_storage_capex": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "gas_boiler_capex": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15% \u2014 fixed cost component"
+    },
+    "gas_boiler_npc": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    }
+  }
+}

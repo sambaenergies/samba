@@ -1,0 +1,2175 @@
+{
+  "$defs": {
+    "Battery": {
+      "additionalProperties": false,
+      "description": "Battery energy storage configuration.",
+      "properties": {
+        "c_rate_charge": {
+          "default": 0.5,
+          "title": "C Rate Charge",
+          "type": "number"
+        },
+        "c_rate_discharge": {
+          "default": 0.5,
+          "title": "C Rate Discharge",
+          "type": "number"
+        },
+        "capacity_kwh": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Capacity Kwh"
+        },
+        "capex_per_kwh": {
+          "title": "Capex Per Kwh",
+          "type": "number"
+        },
+        "charge_efficiency": {
+          "default": 0.95,
+          "title": "Charge Efficiency",
+          "type": "number"
+        },
+        "chemistry": {
+          "default": "li_ion",
+          "enum": [
+            "li_ion",
+            "kibam"
+          ],
+          "title": "Chemistry",
+          "type": "string"
+        },
+        "degradation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BatteryDegradation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "discharge_efficiency": {
+          "default": 0.95,
+          "title": "Discharge Efficiency",
+          "type": "number"
+        },
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "kibam": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/KiBaMParams"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "lifetime_years": {
+          "default": 10,
+          "title": "Lifetime Years",
+          "type": "integer"
+        },
+        "opex_per_kwh_yr": {
+          "default": 0.0,
+          "title": "Opex Per Kwh Yr",
+          "type": "number"
+        },
+        "power_kw": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Power Kw"
+        },
+        "soc_initial": {
+          "default": 0.5,
+          "title": "Soc Initial",
+          "type": "number"
+        },
+        "soc_max": {
+          "default": 1.0,
+          "title": "Soc Max",
+          "type": "number"
+        },
+        "soc_min": {
+          "default": 0.2,
+          "title": "Soc Min",
+          "type": "number"
+        }
+      },
+      "required": [
+        "capex_per_kwh"
+      ],
+      "title": "Battery",
+      "type": "object"
+    },
+    "BatteryDegradation": {
+      "additionalProperties": false,
+      "description": "Capacity-fade model that derives the battery's replacement cadence (v4).\n\nWhen set, the battery's *effective* lifetime is computed from a linear fade\nmodel (calendar + cycling) rather than the fixed ``lifetime_years`` nameplate:\nannual fade [%] = ``calendar_fade_pct_yr`` + ``cycle_fade_pct_per_efc`` x\n(annual equivalent full cycles), and the battery is replaced when cumulative\nfade reaches ``end_of_life_capacity_pct``. EFC is derived from the solved\nannual discharge throughput, so heavier cycling shortens life.",
+      "properties": {
+        "calendar_fade_pct_yr": {
+          "default": 0.0,
+          "title": "Calendar Fade Pct Yr",
+          "type": "number"
+        },
+        "cycle_fade_pct_per_efc": {
+          "default": 0.0,
+          "title": "Cycle Fade Pct Per Efc",
+          "type": "number"
+        },
+        "end_of_life_capacity_pct": {
+          "default": 80.0,
+          "title": "End Of Life Capacity Pct",
+          "type": "number"
+        }
+      },
+      "title": "BatteryDegradation",
+      "type": "object"
+    },
+    "BuyRate": {
+      "additionalProperties": false,
+      "description": "Electricity purchase rate from the grid (or notional off-grid price signal).",
+      "properties": {
+        "endogenous_tiering": {
+          "default": false,
+          "title": "Endogenous Tiering",
+          "type": "boolean"
+        },
+        "monthly_rates": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Monthly Rates"
+        },
+        "monthly_tiers": {
+          "anyOf": [
+            {
+              "items": {
+                "items": {
+                  "$ref": "#/$defs/TierLevel"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Monthly Tiers"
+        },
+        "rate_per_kwh": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rate Per Kwh"
+        },
+        "seasonal_schedule": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SeasonalRate"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seasonal Schedule"
+        },
+        "seasonal_tiers": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SeasonalTiers"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seasonal Tiers"
+        },
+        "tiers": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/TierLevel"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tiers"
+        },
+        "tou_schedule": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/TouPeriod"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tou Schedule"
+        },
+        "type": {
+          "enum": [
+            "flat",
+            "tou",
+            "tiered",
+            "seasonal",
+            "seasonal_tiered",
+            "monthly",
+            "monthly_tiered",
+            "ul_tou"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "BuyRate",
+      "type": "object"
+    },
+    "Components": {
+      "additionalProperties": false,
+      "description": "Container for all system components.",
+      "properties": {
+        "battery": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Battery"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "diesel_generator": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DieselGenerator"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "ev": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EV"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "gas_supply": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GasSupply"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "grid": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Grid"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "heat_pump": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HeatPump"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "inverter": {
+          "$ref": "#/$defs/Inverter"
+        },
+        "pv": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PV"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "thermal_storage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ThermalStorage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "wind_turbine": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WindTurbine"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "inverter"
+      ],
+      "title": "Components",
+      "type": "object"
+    },
+    "Constraints": {
+      "additionalProperties": false,
+      "description": "Hard optimisation constraints.\n\nEvery field here is a **hard** model constraint, not a KPI-only warning.\nViolations cause the solver to reject candidate solutions outright.",
+      "properties": {
+        "force_grid_disconnect": {
+          "default": false,
+          "title": "Force Grid Disconnect",
+          "type": "boolean"
+        },
+        "max_annual_diesel_l": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Annual Diesel L"
+        },
+        "max_battery_cycles_yr": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Battery Cycles Yr"
+        },
+        "max_lpsp": {
+          "default": 0.0,
+          "title": "Max Lpsp",
+          "type": "number"
+        },
+        "max_total_emissions_kg": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Total Emissions Kg"
+        },
+        "min_renewable_fraction": {
+          "default": 0.0,
+          "title": "Min Renewable Fraction",
+          "type": "number"
+        },
+        "thermal_lpsp_max": {
+          "default": 0.0,
+          "title": "Thermal Lpsp Max",
+          "type": "number"
+        }
+      },
+      "title": "Constraints",
+      "type": "object"
+    },
+    "DemandCharge": {
+      "additionalProperties": false,
+      "description": "Demand charge on the monthly peak grid import [$/kW-month].\n\nThe charge is applied to the highest grid-import power reached in each\ncalendar month (optionally restricted to ``hours``).  It is modelled inside\nthe LP as a per-month peak variable, so the solver has an incentive to shave\npeaks (e.g. by discharging storage) rather than merely being billed for them.",
+      "properties": {
+        "hours": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hours"
+        },
+        "rate_per_kw_month": {
+          "title": "Rate Per Kw Month",
+          "type": "number"
+        }
+      },
+      "required": [
+        "rate_per_kw_month"
+      ],
+      "title": "DemandCharge",
+      "type": "object"
+    },
+    "DieselGenerator": {
+      "additionalProperties": false,
+      "description": "Diesel generator configuration.  Capacity is always fixed in v1.",
+      "properties": {
+        "capacity_kw": {
+          "title": "Capacity Kw",
+          "type": "number"
+        },
+        "capex_per_kw": {
+          "title": "Capex Per Kw",
+          "type": "number"
+        },
+        "co2_per_liter_kg": {
+          "default": 2.63,
+          "title": "Co2 Per Liter Kg",
+          "type": "number"
+        },
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "fuel_lhv_kwh_per_l": {
+          "default": 9.9,
+          "title": "Fuel Lhv Kwh Per L",
+          "type": "number"
+        },
+        "fuel_price_per_l": {
+          "title": "Fuel Price Per L",
+          "type": "number"
+        },
+        "intercept_l_per_kw_hr": {
+          "default": 0.084,
+          "title": "Intercept L Per Kw Hr",
+          "type": "number"
+        },
+        "lifetime_years": {
+          "default": 15,
+          "title": "Lifetime Years",
+          "type": "integer"
+        },
+        "min_down_hours": {
+          "default": 0,
+          "title": "Min Down Hours",
+          "type": "integer"
+        },
+        "min_load_fraction": {
+          "default": 0.0,
+          "title": "Min Load Fraction",
+          "type": "number"
+        },
+        "min_up_hours": {
+          "default": 0,
+          "title": "Min Up Hours",
+          "type": "integer"
+        },
+        "opex_per_kw_yr": {
+          "default": 0.0,
+          "title": "Opex Per Kw Yr",
+          "type": "number"
+        },
+        "slope_l_per_kwh": {
+          "default": 0.246,
+          "title": "Slope L Per Kwh",
+          "type": "number"
+        },
+        "startup_cost": {
+          "default": 0.0,
+          "title": "Startup Cost",
+          "type": "number"
+        }
+      },
+      "required": [
+        "capacity_kw",
+        "capex_per_kw",
+        "fuel_price_per_l"
+      ],
+      "title": "DieselGenerator",
+      "type": "object"
+    },
+    "EV": {
+      "additionalProperties": false,
+      "description": "Electric vehicle smart-charging / V2G component.\n\nThe EV battery is modeled as a :class:'solph.components.GenericStorage' on\nthe AC bus with time-varying charge/discharge bounds derived from a\npresence schedule.  V2G discharge earns sell-tariff revenue when enabled.",
+      "properties": {
+        "arrival_hour": {
+          "default": 18,
+          "title": "Arrival Hour",
+          "type": "integer"
+        },
+        "capacity_kwh": {
+          "title": "Capacity Kwh",
+          "type": "number"
+        },
+        "capex": {
+          "default": 0.0,
+          "title": "Capex",
+          "type": "number"
+        },
+        "charge_efficiency": {
+          "default": 0.92,
+          "title": "Charge Efficiency",
+          "type": "number"
+        },
+        "departure_hour": {
+          "default": 8,
+          "title": "Departure Hour",
+          "type": "integer"
+        },
+        "discharge_efficiency": {
+          "default": 0.92,
+          "title": "Discharge Efficiency",
+          "type": "number"
+        },
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "lifetime_kwh": {
+          "default": 200000.0,
+          "title": "Lifetime Kwh",
+          "type": "number"
+        },
+        "lifetime_years": {
+          "default": 10,
+          "title": "Lifetime Years",
+          "type": "integer"
+        },
+        "max_charge_kw": {
+          "title": "Max Charge Kw",
+          "type": "number"
+        },
+        "max_discharge_kw": {
+          "default": 0.0,
+          "title": "Max Discharge Kw",
+          "type": "number"
+        },
+        "opex_per_year": {
+          "default": 0.0,
+          "title": "Opex Per Year",
+          "type": "number"
+        },
+        "presence_csv_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Presence Csv Path"
+        },
+        "presence_source": {
+          "default": "schedule",
+          "enum": [
+            "schedule",
+            "csv"
+          ],
+          "title": "Presence Source",
+          "type": "string"
+        },
+        "replacement_cost": {
+          "default": 0.0,
+          "title": "Replacement Cost",
+          "type": "number"
+        },
+        "self_discharge_rate": {
+          "default": 0.0,
+          "title": "Self Discharge Rate",
+          "type": "number"
+        },
+        "soc_arrival": {
+          "default": 0.3,
+          "title": "Soc Arrival",
+          "type": "number"
+        },
+        "soc_departure": {
+          "default": 0.8,
+          "title": "Soc Departure",
+          "type": "number"
+        },
+        "soc_initial": {
+          "default": 0.5,
+          "title": "Soc Initial",
+          "type": "number"
+        },
+        "soc_max": {
+          "default": 1.0,
+          "title": "Soc Max",
+          "type": "number"
+        },
+        "soc_min": {
+          "default": 0.1,
+          "title": "Soc Min",
+          "type": "number"
+        },
+        "v2g_enabled": {
+          "default": false,
+          "title": "V2G Enabled",
+          "type": "boolean"
+        },
+        "workdays_per_week": {
+          "default": 5,
+          "title": "Workdays Per Week",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "capacity_kwh",
+        "max_charge_kw"
+      ],
+      "title": "EV",
+      "type": "object"
+    },
+    "GasSeasonalRate": {
+      "additionalProperties": false,
+      "description": "A gas rate band that applies to a fixed set of calendar months.",
+      "properties": {
+        "months": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Months",
+          "type": "array"
+        },
+        "rate": {
+          "title": "Rate",
+          "type": "number"
+        }
+      },
+      "required": [
+        "months",
+        "rate"
+      ],
+      "title": "GasSeasonalRate",
+      "type": "object"
+    },
+    "GasSupply": {
+      "additionalProperties": false,
+      "description": "Natural gas supply configuration (Phase 23).\n\nModels a gas-fired boiler as an alternative or supplemental thermal source.\noemof topology::\n\n    [gas_supply Source] --gas_bus--> [gas_boiler Converter] --heat_bus--> demand",
+      "properties": {
+        "boiler_efficiency": {
+          "default": 0.92,
+          "title": "Boiler Efficiency",
+          "type": "number"
+        },
+        "capex": {
+          "default": 2000.0,
+          "title": "Capex",
+          "type": "number"
+        },
+        "co2_per_kwh_th": {
+          "default": 0.205,
+          "title": "Co2 Per Kwh Th",
+          "type": "number"
+        },
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "lifetime_years": {
+          "default": 20,
+          "title": "Lifetime Years",
+          "type": "integer"
+        },
+        "max_output_kw_th": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Output Kw Th"
+        },
+        "opex_per_year": {
+          "default": 100.0,
+          "title": "Opex Per Year",
+          "type": "number"
+        },
+        "tariff": {
+          "$ref": "#/$defs/GasTariff",
+          "default": {
+            "flat_rate": 0.04,
+            "min_charge_per_month": 0.0,
+            "monthly_service_charge": 0.0,
+            "rate_type": "flat",
+            "seasonal_schedule": null,
+            "tiered_limits_kwh_th": null,
+            "tiered_rates": null,
+            "unit": "per_kwh_th"
+          }
+        }
+      },
+      "title": "GasSupply",
+      "type": "object"
+    },
+    "GasTariff": {
+      "additionalProperties": false,
+      "description": "Gas tariff structure -- supports flat, seasonal, and tiered pricing.",
+      "properties": {
+        "flat_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Flat Rate"
+        },
+        "min_charge_per_month": {
+          "default": 0.0,
+          "title": "Min Charge Per Month",
+          "type": "number"
+        },
+        "monthly_service_charge": {
+          "default": 0.0,
+          "title": "Monthly Service Charge",
+          "type": "number"
+        },
+        "rate_type": {
+          "default": "flat",
+          "enum": [
+            "flat",
+            "seasonal",
+            "tiered"
+          ],
+          "title": "Rate Type",
+          "type": "string"
+        },
+        "seasonal_schedule": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/GasSeasonalRate"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seasonal Schedule"
+        },
+        "tiered_limits_kwh_th": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tiered Limits Kwh Th"
+        },
+        "tiered_rates": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tiered Rates"
+        },
+        "unit": {
+          "default": "per_kwh_th",
+          "enum": [
+            "per_kwh_th",
+            "per_gj",
+            "per_mcf",
+            "per_therm"
+          ],
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "title": "GasTariff",
+      "type": "object"
+    },
+    "Grid": {
+      "additionalProperties": false,
+      "description": "Grid connection configuration.",
+      "properties": {
+        "capacity_kw": {
+          "title": "Capacity Kw",
+          "type": "number"
+        },
+        "capex": {
+          "default": 0.0,
+          "title": "Capex",
+          "type": "number"
+        },
+        "emission_factor_kg_per_kwh": {
+          "default": 0.0,
+          "title": "Emission Factor Kg Per Kwh",
+          "type": "number"
+        },
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "export_allowed": {
+          "default": false,
+          "title": "Export Allowed",
+          "type": "boolean"
+        },
+        "export_capacity_kw": {
+          "default": 0.0,
+          "title": "Export Capacity Kw",
+          "type": "number"
+        },
+        "opex_yr": {
+          "default": 0.0,
+          "title": "Opex Yr",
+          "type": "number"
+        }
+      },
+      "required": [
+        "capacity_kw"
+      ],
+      "title": "Grid",
+      "type": "object"
+    },
+    "HeatPump": {
+      "additionalProperties": false,
+      "description": "Air-source heat pump (electrically driven, reversible).\n\nModels the HP as one or two oemof ``Converter`` objects connecting the\nAC bus to the heating / cooling thermal buses.  Hourly COP arrays are\npre-computed from outdoor temperature using a physics-based\n(Carnot-fraction) model -- see :mod:`samba.thermal.cop`.\n\nSizing modes\n------------\n``catalog_auto``  --  Automatically select the smallest catalog model\n    whose rated capacity meets the peak thermal demand.  Requires thermal\n    load peaks to be known (Phase 22).  Defaults to the smallest model\n    (18000 BTU/hr) when no thermal load is configured.\n``fixed``  --  User specifies ``heating_capacity_kw`` /\n    ``cooling_capacity_kw`` directly; ``model_name`` is optional.\n\nCOP sources\n-----------\n``catalog``  --  Physics-based Carnot-fraction COP curve evaluated against\n    outdoor temperature (see :mod:`samba.thermal.cop`).\n``fixed``  --  Constant COP for all timesteps.  Requires\n    ``fixed_cop_heating`` (if mode includes heating) and\n    ``fixed_cop_cooling`` (if mode includes cooling).\n``dataset``  --  COP curves fitted from a user-supplied performance dataset\n    CSV (``cop_dataset_path``); see :mod:`samba.thermal.cop_dataset`.",
+      "properties": {
+        "atmospheric_pressure_kpa": {
+          "default": 101.325,
+          "title": "Atmospheric Pressure Kpa",
+          "type": "number"
+        },
+        "capex": {
+          "default": 0.0,
+          "title": "Capex",
+          "type": "number"
+        },
+        "cooling_capacity_kw": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cooling Capacity Kw"
+        },
+        "cop_dataset_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cop Dataset Path"
+        },
+        "cop_source": {
+          "default": "catalog",
+          "enum": [
+            "catalog",
+            "fixed",
+            "dataset"
+          ],
+          "title": "Cop Source",
+          "type": "string"
+        },
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "fixed_cop_cooling": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fixed Cop Cooling"
+        },
+        "fixed_cop_heating": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fixed Cop Heating"
+        },
+        "heating_capacity_kw": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Heating Capacity Kw"
+        },
+        "indoor_design_temp_c": {
+          "default": 22.22,
+          "title": "Indoor Design Temp C",
+          "type": "number"
+        },
+        "indoor_humidity_ratio": {
+          "default": 0.005,
+          "title": "Indoor Humidity Ratio",
+          "type": "number"
+        },
+        "lifetime_years": {
+          "default": 15,
+          "title": "Lifetime Years",
+          "type": "integer"
+        },
+        "mode": {
+          "default": "both",
+          "enum": [
+            "heating_only",
+            "cooling_only",
+            "both"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "model_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Name"
+        },
+        "opex_per_year": {
+          "default": 0.0,
+          "title": "Opex Per Year",
+          "type": "number"
+        },
+        "sizing": {
+          "default": "catalog_auto",
+          "enum": [
+            "catalog_auto",
+            "fixed"
+          ],
+          "title": "Sizing",
+          "type": "string"
+        },
+        "standby_power_kw": {
+          "default": 0.0,
+          "title": "Standby Power Kw",
+          "type": "number"
+        }
+      },
+      "title": "HeatPump",
+      "type": "object"
+    },
+    "Inverter": {
+      "additionalProperties": false,
+      "description": "AC/DC inverter configuration.",
+      "properties": {
+        "capacity_kw": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Capacity Kw"
+        },
+        "capex_per_kw": {
+          "title": "Capex Per Kw",
+          "type": "number"
+        },
+        "efficiency": {
+          "default": 0.96,
+          "title": "Efficiency",
+          "type": "number"
+        },
+        "lifetime_years": {
+          "default": 10,
+          "title": "Lifetime Years",
+          "type": "integer"
+        },
+        "opex_per_kw_yr": {
+          "default": 0.0,
+          "title": "Opex Per Kw Yr",
+          "type": "number"
+        }
+      },
+      "required": [
+        "capex_per_kw"
+      ],
+      "title": "Inverter",
+      "type": "object"
+    },
+    "KiBaMParams": {
+      "additionalProperties": false,
+      "description": "Lead-acid KiBaM kinetic parameters (used when battery.chemistry == 'kibam').",
+      "properties": {
+        "c_ratio": {
+          "default": 0.42,
+          "title": "C Ratio",
+          "type": "number"
+        },
+        "charge_acceptance": {
+          "default": 0.9,
+          "title": "Charge Acceptance",
+          "type": "number"
+        },
+        "k_rate": {
+          "default": 0.58,
+          "title": "K Rate",
+          "type": "number"
+        },
+        "max_charge_current_a": {
+          "default": 100.0,
+          "title": "Max Charge Current A",
+          "type": "number"
+        },
+        "nominal_voltage_v": {
+          "default": 12.0,
+          "title": "Nominal Voltage V",
+          "type": "number"
+        }
+      },
+      "title": "KiBaMParams",
+      "type": "object"
+    },
+    "Load": {
+      "additionalProperties": false,
+      "description": "Electrical load profile configuration.",
+      "properties": {
+        "annual_kwh": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Annual Kwh"
+        },
+        "csv_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Csv Path"
+        },
+        "daily_profile": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Daily Profile"
+        },
+        "monthly_peak": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Monthly Peak"
+        },
+        "peak_month": {
+          "default": "January",
+          "title": "Peak Month",
+          "type": "string"
+        },
+        "scale_factor": {
+          "default": 1.0,
+          "title": "Scale Factor",
+          "type": "number"
+        },
+        "source": {
+          "enum": [
+            "hourly_csv",
+            "daily_csv",
+            "monthly_total",
+            "monthly_hourly_average",
+            "annual_hourly_average",
+            "annual_daily_average",
+            "generic_monthly",
+            "generic_annual",
+            "generic_annual_total",
+            "generic",
+            "template"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "template_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Template Name"
+        },
+        "thermal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ThermalLoad"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "source"
+      ],
+      "title": "Load",
+      "type": "object"
+    },
+    "Location": {
+      "additionalProperties": false,
+      "description": "Geographic location of the site.",
+      "properties": {
+        "altitude_m": {
+          "default": 0.0,
+          "title": "Altitude M",
+          "type": "number"
+        },
+        "latitude": {
+          "title": "Latitude",
+          "type": "number"
+        },
+        "longitude": {
+          "title": "Longitude",
+          "type": "number"
+        },
+        "timezone": {
+          "title": "Timezone",
+          "type": "string"
+        }
+      },
+      "required": [
+        "latitude",
+        "longitude",
+        "timezone"
+      ],
+      "title": "Location",
+      "type": "object"
+    },
+    "NEM": {
+      "additionalProperties": false,
+      "description": "Annual net-metering / net-billing credit reconciliation.\n\nWithout this, SAMBA nets grid cost annually as ``bought$ \u2212 sold$``, letting\nunlimited export revenue offset import cost. Real NEM tariffs instead bill\n**per calendar month** with a **$0 floor**, roll surplus export credit forward,\nand settle whatever credit remains at year end. This model captures those\nthree behaviours (all monetary; the export valuation is whatever the user puts\nin the ``sell`` rate, so ``mode`` is intent/labelling):\n\n- ``net_metering``: exports typically credited at (near) retail \u2014 set ``sell``\n  equal to the buy rate.\n- ``net_billing``: exports valued at a lower export rate \u2014 set ``sell`` accordingly.\n\nReconciliation each month: ``net$ = bought$ \u2212 sold$``; apply any carried\ncredit; the monthly bill is floored at $0; surplus becomes credit (carried\nforward if ``carryover``). At year end, leftover credit is paid back to the\ncustomer scaled by ``annual_excess_credit_fraction`` (0 = forfeited, the common\ndefault; 1 = full cash-out).",
+      "properties": {
+        "annual_excess_credit_fraction": {
+          "default": 0.0,
+          "title": "Annual Excess Credit Fraction",
+          "type": "number"
+        },
+        "carryover": {
+          "default": true,
+          "title": "Carryover",
+          "type": "boolean"
+        },
+        "mode": {
+          "default": "net_metering",
+          "enum": [
+            "net_metering",
+            "net_billing"
+          ],
+          "title": "Mode",
+          "type": "string"
+        }
+      },
+      "title": "NEM",
+      "type": "object"
+    },
+    "Objective": {
+      "additionalProperties": false,
+      "description": "Optimisation objective.\n\ntype ''\"cost\"'' minimises NPC only (default, v1 behaviour).\ntype ''\"cost_and_emissions\"'' adds a carbon price (''emissions_weight'' $/kg CO2)\nto both the diesel and grid import variable costs inside the LP objective, so the\nsolver trades off cost against emissions.  Use ''samba pareto'' to sweep over\n''emissions_weight'' values and generate a weighted-sum approximation of the\nPareto front.",
+      "properties": {
+        "emissions_weight": {
+          "default": 0.0,
+          "title": "Emissions Weight",
+          "type": "number"
+        },
+        "type": {
+          "default": "cost",
+          "enum": [
+            "cost",
+            "cost_and_emissions"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "title": "Objective",
+      "type": "object"
+    },
+    "PV": {
+      "additionalProperties": false,
+      "description": "Photovoltaic array configuration.",
+      "properties": {
+        "azimuth_deg": {
+          "default": 180.0,
+          "title": "Azimuth Deg",
+          "type": "number"
+        },
+        "bifaciality": {
+          "default": 0.7,
+          "title": "Bifaciality",
+          "type": "number"
+        },
+        "capacity_kw": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Capacity Kw"
+        },
+        "capex_per_kw": {
+          "title": "Capex Per Kw",
+          "type": "number"
+        },
+        "derating_factor": {
+          "default": 0.9,
+          "title": "Derating Factor",
+          "type": "number"
+        },
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "lifetime_years": {
+          "default": 25,
+          "title": "Lifetime Years",
+          "type": "integer"
+        },
+        "module_type": {
+          "default": "monofacial",
+          "enum": [
+            "monofacial",
+            "bifacial"
+          ],
+          "title": "Module Type",
+          "type": "string"
+        },
+        "noct_celsius": {
+          "default": 45.0,
+          "title": "Noct Celsius",
+          "type": "number"
+        },
+        "opex_per_kw_yr": {
+          "default": 0.0,
+          "title": "Opex Per Kw Yr",
+          "type": "number"
+        },
+        "temp_coeff_pmax": {
+          "default": -0.004,
+          "title": "Temp Coeff Pmax",
+          "type": "number"
+        },
+        "tilt_deg": {
+          "default": 20.0,
+          "title": "Tilt Deg",
+          "type": "number"
+        }
+      },
+      "required": [
+        "capex_per_kw"
+      ],
+      "title": "PV",
+      "type": "object"
+    },
+    "Project": {
+      "additionalProperties": false,
+      "description": "Top-level project / economic parameters.",
+      "properties": {
+        "budget": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Budget"
+        },
+        "capex_year": {
+          "default": 0,
+          "title": "Capex Year",
+          "type": "integer"
+        },
+        "currency": {
+          "default": "USD",
+          "title": "Currency",
+          "type": "string"
+        },
+        "discount_rate_nominal": {
+          "title": "Discount Rate Nominal",
+          "type": "number"
+        },
+        "grid_escalation_rate": {
+          "default": 0.0,
+          "title": "Grid Escalation Rate",
+          "type": "number"
+        },
+        "inflation_rate": {
+          "default": 0.0,
+          "title": "Inflation Rate",
+          "type": "number"
+        },
+        "lifetime_years": {
+          "default": 25,
+          "title": "Lifetime Years",
+          "type": "integer"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "re_incentive_rate": {
+          "default": 0.0,
+          "title": "Re Incentive Rate",
+          "type": "number"
+        },
+        "year": {
+          "default": 2025,
+          "title": "Year",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "discount_rate_nominal"
+      ],
+      "title": "Project",
+      "type": "object"
+    },
+    "SeasonalRate": {
+      "additionalProperties": false,
+      "description": "A flat rate that applies during a specific set of months (season).",
+      "properties": {
+        "months": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Months",
+          "type": "array"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "rate_per_kwh": {
+          "title": "Rate Per Kwh",
+          "type": "number"
+        }
+      },
+      "required": [
+        "name",
+        "months",
+        "rate_per_kwh"
+      ],
+      "title": "SeasonalRate",
+      "type": "object"
+    },
+    "SeasonalTiers": {
+      "additionalProperties": false,
+      "description": "A tiered rate that applies during a specific set of months (season).",
+      "properties": {
+        "months": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Months",
+          "type": "array"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "tiers": {
+          "items": {
+            "$ref": "#/$defs/TierLevel"
+          },
+          "title": "Tiers",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "months",
+        "tiers"
+      ],
+      "title": "SeasonalTiers",
+      "type": "object"
+    },
+    "SellRate": {
+      "additionalProperties": false,
+      "description": "Electricity export / sell rate to the grid (feed-in tariff).",
+      "properties": {
+        "monthly_rates": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Monthly Rates"
+        },
+        "rate_per_kwh": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rate Per Kwh"
+        },
+        "tou_schedule": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/TouPeriod"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tou Schedule"
+        },
+        "type": {
+          "enum": [
+            "flat",
+            "tou",
+            "monthly"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "SellRate",
+      "type": "object"
+    },
+    "ServiceCharge": {
+      "additionalProperties": false,
+      "description": "Fixed monthly service / standing charge.\n\nNote: demand-based service charges ($/kW of monthly peak) are out of scope for v1-v2\nand are deferred to v3+.",
+      "properties": {
+        "monthly_flat": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Monthly Flat"
+        },
+        "tiers": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/TierLevel"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tiers"
+        },
+        "type": {
+          "enum": [
+            "flat",
+            "tiered_kwh"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "ServiceCharge",
+      "type": "object"
+    },
+    "Tariff": {
+      "additionalProperties": false,
+      "description": "Electricity tariff definition.",
+      "properties": {
+        "buy": {
+          "$ref": "#/$defs/BuyRate"
+        },
+        "demand_charge": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DemandCharge"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "nem": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NEM"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "sell": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SellRate"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "service_charge": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ServiceCharge"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "buy"
+      ],
+      "title": "Tariff",
+      "type": "object"
+    },
+    "ThermalLoad": {
+      "additionalProperties": false,
+      "description": "Thermal load profile configuration.\n\nSupports two loading strategies:\n\n* ``\"csv\"`` -- supply hourly kW_th arrays directly as CSV files.\n* ``\"degree_day\"`` -- derive heating/cooling demand from outdoor temperature\n  using a per-degree heat-loss model parameterised by ``building_ua_kw_per_k``.\n\nDistribution efficiency\n-----------------------\n``distribution_efficiency`` accounts for losses in the pipe/duct system\nbetween the heat pump (or boiler) output and the point of demand.  The\nthermal demand seen by the supply component equals\n``raw_demand / distribution_efficiency``.\n\nThermal LPSP\n-----------\nWhen ``scenario.constraints.thermal_lpsp_max > 0`` the optimizer is\nallowed to leave a fraction of thermal demand unmet (deficit drawn from\nthe ``heat_unmet`` / ``cool_unmet`` penalty sources).  Use this for\nload-shedding studies.",
+      "properties": {
+        "building_ua_cool_kw_per_k": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Building Ua Cool Kw Per K"
+        },
+        "building_ua_kw_per_k": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Building Ua Kw Per K"
+        },
+        "cooling_csv_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cooling Csv Path"
+        },
+        "cooling_setpoint_c": {
+          "default": 24.0,
+          "title": "Cooling Setpoint C",
+          "type": "number"
+        },
+        "distribution_efficiency": {
+          "default": 0.95,
+          "title": "Distribution Efficiency",
+          "type": "number"
+        },
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "heating_csv_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Heating Csv Path"
+        },
+        "heating_setpoint_c": {
+          "default": 20.0,
+          "title": "Heating Setpoint C",
+          "type": "number"
+        },
+        "source": {
+          "default": "csv",
+          "enum": [
+            "csv",
+            "degree_day"
+          ],
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "title": "ThermalLoad",
+      "type": "object"
+    },
+    "ThermalStorage": {
+      "additionalProperties": false,
+      "description": "Hot-water buffer tank or chilled-water thermal storage (Phase 21).\n\nThe storage is modelled as an oemof ``GenericStorage`` on the heating\n(and optionally cooling) thermal bus.  Energy losses are represented by a\nfixed hourly fractional ``loss_rate_per_hour`` rather than temperature-\ndependent physics (phase 21 simplification).\n\nDefault ``loss_rate_per_hour = 0.002`` (0.2 %/h) corresponds roughly to a\nwell-insulated 200-L hot-water tank held at 60 \u00b0C in a 20 \u00b0C room:\n``Q_loss \u2248 (1.5 m\u00b2) \u00d7 (40 K) / (6 m\u00b2K/W) / (200 L \u00d7 0.00116 kWh/L/K) \u2248 0.2 %/h``.",
+      "properties": {
+        "capacity_kwh_th": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Capacity Kwh Th"
+        },
+        "capacity_max_kwh_th": {
+          "default": 200.0,
+          "title": "Capacity Max Kwh Th",
+          "type": "number"
+        },
+        "capacity_min_kwh_th": {
+          "default": 0.0,
+          "title": "Capacity Min Kwh Th",
+          "type": "number"
+        },
+        "capex_per_kwh_th": {
+          "default": 15.0,
+          "title": "Capex Per Kwh Th",
+          "type": "number"
+        },
+        "charge_power_max_kw_th": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Charge Power Max Kw Th"
+        },
+        "cooling_capacity_kwh_th": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cooling Capacity Kwh Th"
+        },
+        "cooling_capacity_max_kwh_th": {
+          "default": 100.0,
+          "title": "Cooling Capacity Max Kwh Th",
+          "type": "number"
+        },
+        "discharge_power_max_kw_th": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Discharge Power Max Kw Th"
+        },
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "include_cooling_storage": {
+          "default": false,
+          "title": "Include Cooling Storage",
+          "type": "boolean"
+        },
+        "lifetime_years": {
+          "default": 20,
+          "title": "Lifetime Years",
+          "type": "integer"
+        },
+        "loss_rate_per_hour": {
+          "default": 0.002,
+          "title": "Loss Rate Per Hour",
+          "type": "number"
+        },
+        "opex_per_year": {
+          "default": 0.0,
+          "title": "Opex Per Year",
+          "type": "number"
+        },
+        "sizing": {
+          "default": "investment",
+          "enum": [
+            "fixed",
+            "investment"
+          ],
+          "title": "Sizing",
+          "type": "string"
+        },
+        "soc_initial": {
+          "default": 0.5,
+          "title": "Soc Initial",
+          "type": "number"
+        },
+        "soc_max": {
+          "default": 1.0,
+          "title": "Soc Max",
+          "type": "number"
+        },
+        "soc_min": {
+          "default": 0.0,
+          "title": "Soc Min",
+          "type": "number"
+        }
+      },
+      "title": "ThermalStorage",
+      "type": "object"
+    },
+    "TierLevel": {
+      "additionalProperties": false,
+      "description": "A single consumption tier (for tiered electricity rates).",
+      "properties": {
+        "limit_kwh": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Limit Kwh"
+        },
+        "rate_per_kwh": {
+          "title": "Rate Per Kwh",
+          "type": "number"
+        }
+      },
+      "required": [
+        "rate_per_kwh"
+      ],
+      "title": "TierLevel",
+      "type": "object"
+    },
+    "TouPeriod": {
+      "additionalProperties": false,
+      "description": "A single time-of-use pricing period.",
+      "properties": {
+        "hours": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Hours",
+          "type": "array"
+        },
+        "months": {
+          "default": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "items": {
+            "type": "integer"
+          },
+          "title": "Months",
+          "type": "array"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "rate_per_kwh": {
+          "title": "Rate Per Kwh",
+          "type": "number"
+        },
+        "weekday": {
+          "default": true,
+          "title": "Weekday",
+          "type": "boolean"
+        },
+        "weekend": {
+          "default": true,
+          "title": "Weekend",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "hours",
+        "rate_per_kwh"
+      ],
+      "title": "TouPeriod",
+      "type": "object"
+    },
+    "Weather": {
+      "additionalProperties": false,
+      "description": "Weather data source configuration.\n\n- ``\"csv\"``: load a local NSRDB-format CSV (``csv_path``).\n- ``\"nsrdb\"`` (v4): fetch a year of NSRDB data from the NREL API for the\n  scenario ``location`` and ``project.year``, cached locally so runs are\n  reproducible and offline-repeatable. Requires ``nsrdb_api_key`` (or the\n  ``NREL_API_KEY`` environment variable).",
+      "properties": {
+        "csv_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Csv Path"
+        },
+        "nsrdb_api_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Nsrdb Api Key"
+        },
+        "nsrdb_email": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Nsrdb Email"
+        },
+        "source": {
+          "enum": [
+            "csv",
+            "nsrdb"
+          ],
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source"
+      ],
+      "title": "Weather",
+      "type": "object"
+    },
+    "WindTurbine": {
+      "additionalProperties": false,
+      "description": "Wind turbine configuration.",
+      "properties": {
+        "capex_per_unit": {
+          "title": "Capex Per Unit",
+          "type": "number"
+        },
+        "count": {
+          "default": 1,
+          "title": "Count",
+          "type": "integer"
+        },
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "hub_height_m": {
+          "default": 50.0,
+          "title": "Hub Height M",
+          "type": "number"
+        },
+        "lifetime_years": {
+          "default": 20,
+          "title": "Lifetime Years",
+          "type": "integer"
+        },
+        "opex_per_unit_yr": {
+          "default": 0.0,
+          "title": "Opex Per Unit Yr",
+          "type": "number"
+        },
+        "turbine_model": {
+          "title": "Turbine Model",
+          "type": "string"
+        }
+      },
+      "required": [
+        "turbine_model",
+        "capex_per_unit"
+      ],
+      "title": "WindTurbine",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Root model for a SAMBA scenario file.",
+  "properties": {
+    "components": {
+      "$ref": "#/$defs/Components"
+    },
+    "constraints": {
+      "$ref": "#/$defs/Constraints",
+      "default": {
+        "force_grid_disconnect": false,
+        "max_annual_diesel_l": null,
+        "max_battery_cycles_yr": null,
+        "max_lpsp": 0.0,
+        "max_total_emissions_kg": null,
+        "min_renewable_fraction": 0.0,
+        "thermal_lpsp_max": 0.0
+      }
+    },
+    "load": {
+      "$ref": "#/$defs/Load"
+    },
+    "location": {
+      "$ref": "#/$defs/Location"
+    },
+    "objective": {
+      "$ref": "#/$defs/Objective",
+      "default": {
+        "emissions_weight": 0.0,
+        "type": "cost"
+      }
+    },
+    "project": {
+      "$ref": "#/$defs/Project"
+    },
+    "schema_version": {
+      "default": "1.1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "tariff": {
+      "$ref": "#/$defs/Tariff"
+    },
+    "weather": {
+      "$ref": "#/$defs/Weather"
+    }
+  },
+  "required": [
+    "project",
+    "location",
+    "weather",
+    "load",
+    "components",
+    "tariff"
+  ],
+  "title": "Scenario",
+  "type": "object"
+}

@@ -1,0 +1,101 @@
+{
+  "scenario": "g19_heat_pump",
+  "description": "Heat-pump COP + KPI regression: degree-day thermal load on a heating-dominated SF site with a 7562 kWh/yr electrical load. Pure-SAMBA baseline for the physics-based (Carnot-fraction) COP model.",
+  "source": "samba_lp",
+  "run_date": "2026-03-03",
+  "notes": "COP values come from SAMBA's physics-based Carnot-fraction model evaluated against the SF outdoor temperatures; the gate is a SAMBA-vs-SAMBA regression on the re-baselined KPIs.",
+  "kpis": {
+    "npc": 24501.9264,
+    "lcoe": 0.289826,
+    "pv_kw": 0.0,
+    "battery_kwh": 0.0,
+    "inverter_kw": 0.0,
+    "annual_pv_kwh": 0.0,
+    "renewable_fraction": 0.0,
+    "annual_diesel_l": 0.0,
+    "annual_heat_produced_kwh": 26609.0,
+    "annual_cool_produced_kwh": 245.7895,
+    "mean_cop_heating": 4.5549,
+    "mean_cop_cooling": 5.4723,
+    "annual_heating_demand_kwh_th": 26609.0,
+    "annual_cooling_demand_kwh_th": 245.7895,
+    "annual_hp_elec_kwh": 6249.0771
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "pv_kw": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "zero \u2014 no PV"
+    },
+    "battery_kwh": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "zero \u2014 no battery"
+    },
+    "inverter_kw": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "zero \u2014 no DC bus"
+    },
+    "annual_pv_kwh": {
+      "type": "absolute",
+      "value": 1.0,
+      "note": "zero \u2014 no PV"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.001,
+      "note": "zero"
+    },
+    "annual_diesel_l": {
+      "type": "absolute",
+      "value": 1.0,
+      "note": "zero \u2014 no DG"
+    },
+    "annual_heat_produced_kwh": {
+      "type": "relative",
+      "value": 0.02,
+      "note": "\u00b12%"
+    },
+    "annual_cool_produced_kwh": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15% \u2014 small cooling load"
+    },
+    "mean_cop_heating": {
+      "type": "relative",
+      "value": 0.02,
+      "note": "\u00b12% SAMBA regression gate"
+    },
+    "mean_cop_cooling": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15% SAMBA regression gate"
+    },
+    "annual_heating_demand_kwh_th": {
+      "type": "relative",
+      "value": 0.02,
+      "note": "\u00b12%"
+    },
+    "annual_cooling_demand_kwh_th": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15% \u2014 small value"
+    },
+    "annual_hp_elec_kwh": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    }
+  }
+}

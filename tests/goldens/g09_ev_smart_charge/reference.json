@@ -1,0 +1,90 @@
+{
+  "scenario": "g09_ev_smart_charge",
+  "description": "Grid + EV 60 kWh: smart charging with TOU tariff, V2G disabled (Phase 15).",
+  "source": "samba_lp",
+  "samba_version": "2.0.0",
+  "run_date": "2026-03-03",
+  "notes": "EV shifts charging to off-peak windows (arrival 18:00, departure 08:00). No V2G. total_grid_bought includes base load (5000 kWh/yr) plus ev charging. ev_v2g_revenue must be 0.",
+  "kpis": {
+    "npc": 15981.01,
+    "lcoe": 0.392526,
+    "pv_kw": 0.0,
+    "battery_kwh": 0.0,
+    "inverter_kw": 1.0,
+    "annual_pv_kwh": 0.0,
+    "renewable_fraction": 0.0,
+    "annual_diesel_l": 0.0,
+    "total_grid_bought": 14215.5009,
+    "annual_ev_charge_kwh": 9215.5009,
+    "annual_ev_discharge_kwh": 0.0,
+    "ev_v2g_revenue": 0.0,
+    "total_grid_cost_net": 15981.01
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "pv_kw": {
+      "type": "absolute",
+      "value": 0.5,
+      "note": "\u00b10.5 kW \u2014 expected 0"
+    },
+    "battery_kwh": {
+      "type": "absolute",
+      "value": 5.0,
+      "note": "\u00b15 kWh \u2014 expected 0"
+    },
+    "inverter_kw": {
+      "type": "absolute",
+      "value": 0.5,
+      "note": "\u00b10.5 kW \u2014 fixed at 1.0"
+    },
+    "annual_pv_kwh": {
+      "type": "absolute",
+      "value": 100.0,
+      "note": "\u00b1100 kWh \u2014 expected 0"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.05,
+      "note": "\u00b10.05 absolute"
+    },
+    "annual_diesel_l": {
+      "type": "absolute",
+      "value": 10.0,
+      "note": "\u00b110 L \u2014 expected 0"
+    },
+    "total_grid_bought": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "annual_ev_charge_kwh": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "ev_v2g_revenue": {
+      "type": "absolute",
+      "value": 50.0,
+      "note": "\u00b1\u00a350 absolute \u2014 must be ~0"
+    },
+    "annual_ev_discharge_kwh": {
+      "type": "absolute",
+      "value": 10.0,
+      "note": "\u00b110 kWh absolute \u2014 V2G disabled, expected 0"
+    },
+    "total_grid_cost_net": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    }
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "scenario": "g10_ev_v2g",
+  "description": "Grid + EV 60 kWh: V2G enabled with TOU buy and flat sell tariff (Phase 15).",
+  "source": "samba_lp",
+  "samba_version": "2.0.0",
+  "run_date": "2026-03-03",
+  "notes": "V2G sell revenue (\u00a38001) dominates NPC yielding negative NPC (-\u00a312048). annual_ev_discharge_kwh >> annual_ev_charge_kwh relative to g09 because V2G cycles the battery aggressively during peak export windows. total_grid_bought is high because EV is charged heavily in off-peak to enable V2G discharge at peak.",
+  "kpis": {
+    "npc": -12550.8602,
+    "lcoe": -0.308274,
+    "pv_kw": 0.0,
+    "battery_kwh": 0.0,
+    "inverter_kw": 1.0,
+    "annual_pv_kwh": 0.0,
+    "renewable_fraction": 0.0,
+    "annual_diesel_l": 0.0,
+    "total_grid_bought": 43415.5009,
+    "annual_ev_charge_kwh": 45584.0,
+    "annual_ev_discharge_kwh": 36368.4991,
+    "ev_v2g_revenue": 8001.0698,
+    "total_grid_cost_net": -12550.8602
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "pv_kw": {
+      "type": "absolute",
+      "value": 0.5,
+      "note": "\u00b10.5 kW \u2014 expected 0"
+    },
+    "battery_kwh": {
+      "type": "absolute",
+      "value": 5.0,
+      "note": "\u00b15 kWh \u2014 expected 0"
+    },
+    "inverter_kw": {
+      "type": "absolute",
+      "value": 0.5,
+      "note": "\u00b10.5 kW \u2014 fixed at 1.0"
+    },
+    "annual_pv_kwh": {
+      "type": "absolute",
+      "value": 100.0,
+      "note": "\u00b1100 kWh \u2014 expected 0"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.05,
+      "note": "\u00b10.05 absolute"
+    },
+    "annual_diesel_l": {
+      "type": "absolute",
+      "value": 10.0,
+      "note": "\u00b110 L \u2014 expected 0"
+    },
+    "total_grid_bought": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "annual_ev_charge_kwh": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "annual_ev_discharge_kwh": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "ev_v2g_revenue": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "total_grid_cost_net": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    }
+  }
+}

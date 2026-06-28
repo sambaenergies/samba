@@ -1,0 +1,84 @@
+{
+  "scenario": "g14_heat_pump_cooling_only",
+  "description": "Grid + HP (cooling_only, catalog_auto): constant 4 kW_th cooling load, flat $0.12/kWh. Validates catalog COP cooling model and T_iwb psychrometrics.",
+  "source": "samba_lp",
+  "samba_version": "3.0.0",
+  "run_date": "2026-03-03",
+  "notes": "annual_cool_produced = 4 kW \u00d7 8760 h = 35040 kWh_th. mean_cop_cooling ~5.75 at SF climate. 13-term polynomial cooling COP validated.",
+  "kpis": {
+    "npc": 14010.5274,
+    "lcoe": 0.250644,
+    "pv_kw": 0.0,
+    "battery_kwh": 0.0,
+    "inverter_kw": 0.0,
+    "annual_pv_kwh": 0.0,
+    "renewable_fraction": 0.0,
+    "annual_diesel_l": 0.0,
+    "annual_cool_produced_kwh": 35040.0,
+    "mean_cop_cooling": 7.9178,
+    "annual_cooling_demand_kwh_th": 35040.0,
+    "annual_hp_elec_kwh": 4443.5102
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "pv_kw": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "zero \u2014 no PV"
+    },
+    "battery_kwh": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "zero \u2014 no battery"
+    },
+    "inverter_kw": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "zero \u2014 no DC bus"
+    },
+    "annual_pv_kwh": {
+      "type": "absolute",
+      "value": 1.0,
+      "note": "zero \u2014 no PV"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.001,
+      "note": "zero"
+    },
+    "annual_diesel_l": {
+      "type": "absolute",
+      "value": 1.0,
+      "note": "zero \u2014 no DG"
+    },
+    "annual_cool_produced_kwh": {
+      "type": "relative",
+      "value": 0.01,
+      "note": "\u00b11% \u2014 exactly 4 kW \u00d7 8760h"
+    },
+    "mean_cop_cooling": {
+      "type": "relative",
+      "value": 0.02,
+      "note": "\u00b12% \u2014 catalog polynomial deterministic"
+    },
+    "annual_cooling_demand_kwh_th": {
+      "type": "relative",
+      "value": 0.01,
+      "note": "\u00b11%"
+    },
+    "annual_hp_elec_kwh": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    }
+  }
+}

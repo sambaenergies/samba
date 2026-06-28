@@ -1,0 +1,25 @@
+# SAMBA representative air-source heat-pump COP reference dataset.
+#
+# Purpose: a license-clean, in-tree example for `heat_pump.cop_source: "dataset"`.
+# These are REPRESENTATIVE COP values for a modern variable-speed cold-climate
+# ASHP at AHRI 210/240 rating-point outdoor temperatures (heating: 47/17/5 degF
+# = 8.3 / -8.3 / -15 degC; cooling: 82/95 degF = 27.8 / 35 degC), with a few
+# anchor points added for the extremes. They are typical published figures
+# (engineering reference values / facts), NOT a specific manufacturer's data.
+#
+# For real-population fidelity, fetch a current dataset with `samba fetch-cop-data`
+# (e.g. the NEEP cold-climate ASHP list) and point cop_dataset_path at the result.
+#
+# Columns: outdoor_temp_c, cop_heating, cop_cooling  (blank = no point for that mode)
+outdoor_temp_c,cop_heating,cop_cooling
+-25,1.6,
+-15,2.0,
+-8.3,2.4,
+0,3.0,
+8.3,3.7,
+12,4.1,
+25,,4.9
+27.8,,4.4
+35,,3.3
+40,,2.9
+46,,2.4

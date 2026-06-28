@@ -1,0 +1,146 @@
+# SAMBA Golden Scenario g01 — Grid-tied PV + Battery, TOU Tariff
+#
+# Topology: Grid + PV (investment) + Battery (investment) + Inverter (investment)
+#
+# Pure-SAMBA LP regression baseline (KPIs stored in reference.json).
+
+schema_version: "1.0"
+
+project:
+  name: "g01 — Grid-tied PV + Battery (TOU)"
+  year: 2013
+  lifetime_years: 25
+  discount_rate_nominal: 0.045
+  inflation_rate: 0.02
+  re_incentive_rate: 0.0
+  budget: null
+  currency: "USD"
+  capex_year: 0
+
+location:
+  latitude: 37.77
+  longitude: -122.42
+  altitude_m: 0.0
+  timezone: "America/Los_Angeles"
+
+weather:
+  source: "csv"
+  # NSRDB-format CSV: 3 header rows then 8760 hourly data rows
+  csv_path: "../../../examples/content/weather_sf_2019.csv"
+
+load:
+  source: "hourly_csv"
+  csv_path: "../../../examples/content/load_residential_8760.csv"
+
+components:
+
+  pv:
+    enabled: true
+    capacity_kw: null              # design variable — solver picks optimal kW
+    capex_per_kw: 2368.0
+    opex_per_kw_yr: 30.36
+    lifetime_years: 25
+    derating_factor: 0.90
+    tilt_deg: 33.0
+    azimuth_deg: 180.0
+    module_type: "monofacial"
+    noct_celsius: 45.0
+    temp_coeff_pmax: -0.003
+
+  battery:
+    enabled: true
+    capacity_kwh: null             # design variable
+    chemistry: "li_ion"
+    capex_per_kwh: 1450.0
+    opex_per_kwh_yr: 10.0
+    lifetime_years: 10
+    soc_min: 0.10
+    soc_max: 1.00
+    soc_initial: 0.50
+    charge_efficiency: 0.9487
+    discharge_efficiency: 0.9487
+    c_rate_charge: 1.0
+    c_rate_discharge: 1.0
+
+  inverter:
+    capacity_kw: null              # design variable
+    capex_per_kw: 314.0
+    opex_per_kw_yr: 0.0
+    lifetime_years: 25
+    efficiency: 0.96
+
+  grid:
+    enabled: true
+    capacity_kw: 50.0
+    export_allowed: true
+    export_capacity_kw: 50.0
+    capex: 0.0
+    opex_yr: 0.0
+
+tariff:
+  buy:
+    type: "tou"
+    # season=[0,0,0,0,0,1,1,1,1,0,0,0] → summer=months 6-9, winter=months 1-5,10-12
+    # treat_special_days_as_offpeak=False → same rates for weekdays and weekends
+    tou_schedule:
+      # --- Summer (Jun–Sep) ---
+      - name: "summer_on_peak"
+        months: [6, 7, 8, 9]
+        weekday: true
+        weekend: true
+        hours: [16, 17, 18, 19, 20]   # 4 PM – 8 PM
+        rate_per_kwh: 0.61
+
+      - name: "summer_mid_peak"
+        months: [6, 7, 8, 9]
+        weekday: true
+        weekend: true
+        hours: [15, 21, 22, 23]        # 3 PM and 9 PM – 11 PM
+        rate_per_kwh: 0.45
+
+      - name: "summer_off_peak"
+        months: [6, 7, 8, 9]
+        weekday: true
+        weekend: true
+        hours: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        rate_per_kwh: 0.40
+
+      # --- Winter (Jan–May, Oct–Dec) ---
+      - name: "winter_on_peak"
+        months: [1, 2, 3, 4, 5, 10, 11, 12]
+        weekday: true
+        weekend: true
+        hours: [16, 17, 18, 19, 20]   # 4 PM – 8 PM
+        rate_per_kwh: 0.38
+
+      - name: "winter_mid_peak"
+        months: [1, 2, 3, 4, 5, 10, 11, 12]
+        weekday: true
+        weekend: true
+        hours: [15, 21, 22, 23]
+        rate_per_kwh: 0.36
+
+      - name: "winter_off_peak"
+        months: [1, 2, 3, 4, 5, 10, 11, 12]
+        weekday: true
+        weekend: true
+        hours: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        rate_per_kwh: 0.35
+
+  sell:
+    type: "flat"
+    rate_per_kwh: 0.042
+
+  service_charge:
+    type: "flat"
+    monthly_flat: 15.0
+
+constraints:
+  max_lpsp: 0.0001
+  min_renewable_fraction: 0.50
+  max_annual_diesel_l: null
+  max_battery_cycles_yr: null
+  force_grid_disconnect: false
+
+objective:
+  type: "cost"

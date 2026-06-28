@@ -1,0 +1,23 @@
+# Keep the build context small and reproducible.
+.git
+.github
+.venv
+__pycache__/
+*.pyc
+.mypy_cache
+.pytest_cache
+.ruff_cache
+
+# Not needed in the service image
+tests
+planning
+docs
+examples
+ui
+scripts
+working
+artifacts
+results
+_reference
+*.md
+!README.md

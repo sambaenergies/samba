@@ -1,0 +1,60 @@
+{
+  "scenario": "g04_offgrid_pv_wind_batt",
+  "description": "Off-grid PV + Wind (1x generic_10kW) + Battery (design variable), San Francisco CA",
+  "source": "samba_lp",
+  "samba_version": "post-bugfix-ABC",
+  "run_date": "2026-03-03",
+  "notes": "Rebaselined to SAMBA LP output after Bug A/B/C fixes. Wind CF=0.7% at SF (3.1 m/s at 30m hub). Wind cost $1.25/kWh vs PV $0.07/kWh - LP correctly installs zero wind, oversizes PV+battery for off-grid LPSP=0. Correct LP optimum for this location.",
+  "kpis": {
+    "npc": 152153.1254,
+    "lcoe": 1.562408,
+    "pv_kw": 21.1255,
+    "battery_kwh": 20.7722,
+    "inverter_kw": 1.29,
+    "annual_pv_kwh": 35143.2596,
+    "renewable_fraction": 1.0,
+    "annual_diesel_l": 0.0
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "+-10% LP regression gate"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "+-10%"
+    },
+    "pv_kw": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "+-15%"
+    },
+    "battery_kwh": {
+      "type": "relative",
+      "value": 0.2,
+      "note": "+-20%"
+    },
+    "inverter_kw": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "+-15%"
+    },
+    "annual_pv_kwh": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "+-10%"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.05,
+      "note": "+-0.05 absolute"
+    },
+    "annual_diesel_l": {
+      "type": "absolute",
+      "value": 10.0,
+      "note": "+-10 L absolute no DG"
+    }
+  }
+}

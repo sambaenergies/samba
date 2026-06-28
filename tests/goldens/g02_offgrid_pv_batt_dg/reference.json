@@ -1,0 +1,60 @@
+{
+  "scenario": "g02_offgrid_pv_batt_dg",
+  "description": "Off-grid PV + Battery (design variable) + Diesel Generator (10 kW fixed), San Francisco CA",
+  "source": "samba_lp",
+  "samba_version": "post-bugfix-ABC",
+  "run_date": "2026-03-03",
+  "notes": "Rebaselined to SAMBA LP output after Bug A/B/C fixes. DG capex is NOT in LP objective so LP installs minimum PV to satisfy min_renewable_fraction=0.50 (2.9 kW) and runs DG for remaining load. Battery near-zero (too expensive vs DG fuel at $0.22/kWh). High annual_diesel_l=9041 L is LP-correct given model: DG is only fuel-cost in objective.",
+  "kpis": {
+    "npc": 223498.3048,
+    "lcoe": 2.295028,
+    "pv_kw": 2.1219,
+    "battery_kwh": 0.0,
+    "inverter_kw": 0.7914,
+    "annual_pv_kwh": 3529.9405,
+    "renewable_fraction": 0.489533,
+    "annual_diesel_l": 8513.2305
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "+-10% LP regression gate"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "+-10%"
+    },
+    "pv_kw": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "+-15%"
+    },
+    "battery_kwh": {
+      "type": "absolute",
+      "value": 5.0,
+      "note": "+-5 kWh absolute LP result is ~0"
+    },
+    "inverter_kw": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "+-15%"
+    },
+    "annual_pv_kwh": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "+-10%"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.05,
+      "note": "+-0.05 absolute"
+    },
+    "annual_diesel_l": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "+-15% DG runs heavily"
+    }
+  }
+}

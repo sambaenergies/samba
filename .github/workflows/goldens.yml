@@ -1,0 +1,43 @@
+name: Golden Scenarios
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # 03:00 UTC nightly
+  push:
+    branches: [main]
+    paths:
+      - "samba/**"
+      - "tests/goldens/**"
+  workflow_dispatch:
+
+jobs:
+  goldens:
+    name: Goldens (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          python-version: "${{ matrix.python-version }}"
+
+      - name: Install SAMBA and dev dependencies
+        run: uv sync --extra cli
+
+      - name: Run golden scenarios
+        run: uv run pytest tests/goldens/ -m benchmark --tb=short -q
+
+      - name: Upload golden output on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-failure-py${{ matrix.python-version }}
+          path: tests/goldens/**/output/
+          if-no-files-found: ignore

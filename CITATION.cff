@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use SAMBA in academic work, please cite it as below. See docs/acknowledgements.md for the project that inspired it."
+title: "SAMBA — Systems Advisor for Microgrids & Building Analysis"
+abstract: "An open-source (MPL-2.0) Python tool for optimal sizing and techno-economic analysis of hybrid microgrids via LP/MILP optimisation."
+type: software
+authors:
+  - family-names: Brooks
+    given-names: Cameron
+license: MPL-2.0
+repository-code: "https://github.com/sambaenergies/samba"
+keywords:
+  - microgrid
+  - energy
+  - optimization
+  - oemof

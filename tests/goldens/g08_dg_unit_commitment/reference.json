@@ -1,0 +1,78 @@
+{
+  "scenario": "g08_dg_unit_commitment",
+  "description": "Off-grid PV + Battery + DG 10 kW: DG economics golden (Phase 14). LP model with continuous DG dispatch \u2014 MILP unit-commitment is covered by test_dg_milp.py.",
+  "source": "samba_lp",
+  "samba_version": "2.0.0",
+  "run_date": "2026-03-03",
+  "notes": "Pure LP (min_up_hours=0, startup_cost=0). DG dominates the solution due to high generic load (4380 kWh/yr). Small PV is installed but DG handles the majority of energy. Battery_kwh near-zero indicates DG covers variability cheaply.",
+  "kpis": {
+    "npc": 133492.0352,
+    "lcoe": 2.72618,
+    "pv_kw": 1.6578,
+    "battery_kwh": 0.0,
+    "inverter_kw": 0.6857,
+    "annual_pv_kwh": 2757.7786,
+    "renewable_fraction": 0.480595,
+    "annual_diesel_l": 8366.2767,
+    "total_emissions_kg": 22003.3077,
+    "total_grid_bought": 0.0,
+    "dg_operating_hours": 6482.0
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "pv_kw": {
+      "type": "relative",
+      "value": 0.2,
+      "note": "\u00b120% \u2014 small PV, LP sensitive"
+    },
+    "battery_kwh": {
+      "type": "absolute",
+      "value": 5.0,
+      "note": "\u00b15 kWh absolute \u2014 near-zero reference"
+    },
+    "inverter_kw": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "\u00b115%"
+    },
+    "annual_pv_kwh": {
+      "type": "relative",
+      "value": 0.2,
+      "note": "\u00b120%"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "\u00b10.10 absolute"
+    },
+    "annual_diesel_l": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110% \u2014 dominant energy source"
+    },
+    "total_emissions_kg": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "dg_operating_hours": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "total_grid_bought": {
+      "type": "absolute",
+      "value": 50.0,
+      "note": "\u00b150 kWh absolute \u2014 off-grid, expected 0"
+    }
+  }
+}

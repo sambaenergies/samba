@@ -1,0 +1,42 @@
+# SAMBA Golden g20 — Grid + PV + Battery with a demand charge (v4)
+# Exercises the LP-integrated $/kW-month demand charge (peak shaving).
+schema_version: "4.0"
+project:
+  name: "g20 — Demand charge"
+  year: 2013
+  lifetime_years: 25
+  discount_rate_nominal: 0.045
+  inflation_rate: 0.02
+  currency: "USD"
+location:
+  latitude: 37.77
+  longitude: -122.42
+  altitude_m: 0.0
+  timezone: "America/Los_Angeles"
+weather:
+  source: "csv"
+  csv_path: "../../../examples/content/weather_sf_2019.csv"
+load:
+  source: "hourly_csv"
+  csv_path: "../../../examples/content/load_residential_8760.csv"
+  scale_factor: 10.0
+components:
+  pv:
+    enabled: true
+    capacity_kw: null
+    capex_per_kw: 1200.0
+  battery:
+    enabled: true
+    capacity_kwh: null
+    capex_per_kwh: 350.0
+  inverter:
+    capacity_kw: null
+    capex_per_kw: 300.0
+  grid:
+    capacity_kw: 100.0
+    export_allowed: true
+    export_capacity_kw: 50.0
+tariff:
+  buy: { type: "flat", rate_per_kwh: 0.20 }
+  sell: { type: "flat", rate_per_kwh: 0.05 }
+  demand_charge: { rate_per_kw_month: 12.0 }

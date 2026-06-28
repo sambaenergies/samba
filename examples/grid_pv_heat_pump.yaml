@@ -1,0 +1,149 @@
+# SAMBA — Grid + PV + Heat Pump Example (Phase 20)
+#
+# Demonstrates a grid-connected site with rooftop PV and a heat pump serving
+# space heating and cooling; COP is computed at each hour from the outdoor
+# dry-bulb temperature using the physics-based (Carnot-fraction) model.
+#
+# Phase 20 note
+# -------------
+# Thermal demand (heat_load / cool_load) is modelled as zero until Phase 22
+# (thermal load schema) is complete.  The heat pump topology is compiled and
+# optimised end-to-end, but dispatch will be zero until a thermal demand
+# profile is supplied.
+#
+# Units: kW, kWh, local currency per unit, °C
+
+schema_version: "1.0"
+
+# ---------------------------------------------------------------------------
+# Project
+# ---------------------------------------------------------------------------
+project:
+  name: "Grid + PV + Heat Pump"
+  year: 2025
+  lifetime_years: 20
+  discount_rate_nominal: 0.07
+  inflation_rate: 0.025
+  re_incentive_rate: 0.0          # no incentive; set to 0.30 for 30 % ITC
+  budget: null
+  currency: "USD"
+  capex_year: 0
+
+# ---------------------------------------------------------------------------
+# Location
+# ---------------------------------------------------------------------------
+location:
+  latitude: 37.77                 # San Francisco, CA
+  longitude: -122.42
+  altitude_m: 32.0
+  timezone: "America/Los_Angeles"
+
+# ---------------------------------------------------------------------------
+# Weather
+# ---------------------------------------------------------------------------
+weather:
+  source: "csv"
+  csv_path: "content/weather_sf_2019.csv"   # NSRDB-format CSV: GHI, DHI, DNI, Temp, WindSpeed
+
+# ---------------------------------------------------------------------------
+# Load
+# ---------------------------------------------------------------------------
+load:
+  source: "hourly_csv"
+  csv_path: "content/load_residential_8760.csv"   # electrical demand only (kW)
+
+# ---------------------------------------------------------------------------
+# Components
+# ---------------------------------------------------------------------------
+components:
+
+  # --- Inverter ---
+  inverter:
+    capacity_kw: null              # null → solver chooses size
+    capex_per_kw: 300.0
+    opex_per_kw_yr: 6.0
+    lifetime_years: 15
+    efficiency: 0.97
+
+  # --- PV array (rooftop, south-facing) ---
+  pv:
+    enabled: true
+    capacity_kw: null             # null → solver chooses
+    capex_per_kw: 900.0
+    opex_per_kw_yr: 10.0
+    lifetime_years: 25
+
+    # Mounting / array geometry
+    tilt_deg: 35.0
+    azimuth_deg: 180.0            # 180 = south
+    module_type: "monofacial"
+    derating_factor: 0.86         # ≈ 14 % system losses
+
+  # --- Grid connection ---
+  grid:
+    capacity_kw: 20.0             # grid import limit [kW]
+    export_allowed: true          # allow PV export
+    export_capacity_kw: 16.0      # grid export limit [kW]
+    emission_factor_kg_per_kwh: 0.233   # grid carbon intensity [kg CO₂ / kWh]
+
+  # --- Heat Pump ---
+  heat_pump:
+    enabled: true
+
+    # Operating mode: "both" | "heating_only" | "cooling_only"
+    mode: "both"
+
+    # Sizing: "catalog_auto" = select the smallest standard model whose rated
+    #         capacity meets the peak thermal demand.
+    #         "fixed" = explicitly set capacity_kw below.
+    sizing: "catalog_auto"
+    # capacity_kw: 7.0             # required when sizing: "fixed"
+
+    # COP model: "catalog" = physics-based Carnot-fraction COP (temperature-dependent; default)
+    #            "fixed"   = constant COP set via fixed_cop_heating / fixed_cop_cooling
+    #            "dataset" = fit COP(T) from a curated CSV of rating points
+    #                        (see grid_pv_heat_pump_dataset.yaml for an opt-in demo)
+    cop_source: "catalog"
+    # fixed_cop_heating: 3.5       # required when cop_source: "fixed"
+    # fixed_cop_cooling: 4.0       # required when cop_source: "fixed"
+
+    # Indoor design conditions used for the cooling-COP wet-bulb (Stull 2011)
+    indoor_design_temp_c: 22.22
+    indoor_humidity_ratio: 0.005
+
+    # Always-on parasitic / standby power [kW]; 0 = ignore
+    standby_power_kw: 0.0
+
+    # Economics
+    capex: 8000.0                 # total installed capital cost
+    opex_per_year: 160.0
+    lifetime_years: 15
+
+# ---------------------------------------------------------------------------
+# Tariff
+# ---------------------------------------------------------------------------
+tariff:
+  buy:
+    type: "tou"
+    # Economy-7-style approximation: cheap overnight, peak daytime.
+    # Every hour 0–23 must be covered, for all 12 months.
+    tou_schedule:
+      - name: "off_peak"
+        months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        weekday: true
+        weekend: true
+        hours: [0, 1, 2, 3, 4, 5, 6, 7]      # 00:00–08:00
+        rate_per_kwh: 0.10
+      - name: "on_peak"
+        months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        weekday: true
+        weekend: true
+        hours: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]   # 08:00–24:00
+        rate_per_kwh: 0.28
+  sell:
+    type: "flat"
+    rate_per_kwh: 0.05             # export tariff (SEG rate)
+
+  service_charge:
+    type: "flat"
+    monthly_flat: 9.0             # standing charge [$/month] (≈ 0.30/day)

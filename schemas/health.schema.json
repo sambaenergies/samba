@@ -1,0 +1,35 @@
+{
+  "description": "Response body for ''GET /api/v1/health''.\n\nAttributes\n----------\nstatus:\n    Always ''\"ok\"'' when the service is running.\nversion:\n    Installed ''samba-core'' package version string.\nsolver:\n    Configured solver name (from :attr:'~samba_service.config.ServiceConfig.solver').\nsolver_ready:\n    ''True'' when the configured solver binary/package is importable.\nactive_jobs:\n    Number of jobs currently in ''PENDING'' or ''RUNNING'' state.",
+  "properties": {
+    "active_jobs": {
+      "default": 0,
+      "title": "Active Jobs",
+      "type": "integer"
+    },
+    "solver": {
+      "title": "Solver",
+      "type": "string"
+    },
+    "solver_ready": {
+      "title": "Solver Ready",
+      "type": "boolean"
+    },
+    "status": {
+      "const": "ok",
+      "default": "ok",
+      "title": "Status",
+      "type": "string"
+    },
+    "version": {
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "version",
+    "solver",
+    "solver_ready"
+  ],
+  "title": "HealthResponse",
+  "type": "object"
+}

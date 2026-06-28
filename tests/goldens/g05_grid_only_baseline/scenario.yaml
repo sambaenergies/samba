@@ -1,0 +1,79 @@
+# SAMBA Golden Scenario g05 — Grid-only Baseline
+#
+# Topology: Grid only (no PV, no battery, no DG); all load served from grid import
+# Location: San Francisco, CA, USA
+# Year:     2013
+#
+# Purpose: Establish the grid-only economic baseline for comparison.
+# There are no design variables (no investment); SAMBA simply computes the
+# NPV of grid electricity costs for the annual load profile.
+#
+# Reference: Physics-based estimate (source="estimated" in reference.json).
+# NPC ≈ Annual_cost × PWF = ($1,900 elect + $180 service) × 18.6 ≈ $38,688
+
+schema_version: "1.0"
+
+project:
+  name: "g05 — Grid-only Baseline"
+  year: 2013
+  lifetime_years: 25
+  discount_rate_nominal: 0.045
+  inflation_rate: 0.02
+  re_incentive_rate: 0.0
+  budget: null
+  currency: "USD"
+  capex_year: 0
+
+location:
+  latitude: 37.77
+  longitude: -122.42
+  altitude_m: 0.0
+  timezone: "America/Los_Angeles"
+
+weather:
+  source: "csv"
+  csv_path: "../../../examples/content/weather_sf_2019.csv"
+
+load:
+  source: "hourly_csv"
+  csv_path: "../../../examples/content/load_residential_8760.csv"
+
+components:
+  # No PV, battery, or DG — grid only.
+  # Inverter is always required by SAMBA schema; set capex=0 for grid-only baseline.
+
+  inverter:
+    capacity_kw: null              # design variable (will optimise to 0 — no PV/battery)
+    capex_per_kw: 0.0              # no inverter capex for grid-only baseline
+    opex_per_kw_yr: 0.0
+    lifetime_years: 25
+    efficiency: 0.96
+
+  grid:
+    enabled: true
+    capacity_kw: 50.0              # maximum import capacity
+    export_allowed: false          # no export in grid-only baseline
+    export_capacity_kw: 0.0
+    capex: 0.0
+    opex_yr: 0.0
+
+tariff:
+  buy:
+    type: "flat"
+    rate_per_kwh: 0.20
+
+  # No sell rate (export_allowed=false)
+
+  service_charge:
+    type: "flat"
+    monthly_flat: 15.0
+
+constraints:
+  max_lpsp: 0.001                  # grid can always supply load
+  min_renewable_fraction: 0.0      # no renewable requirement for baseline
+  max_annual_diesel_l: null
+  max_battery_cycles_yr: null
+  force_grid_disconnect: false
+
+objective:
+  type: "cost"

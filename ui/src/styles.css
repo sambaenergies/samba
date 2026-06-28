@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+/* Component classes live in the components layer so Tailwind utilities
+   (e.g. `bg-slate-900 text-white` on an active tab) override them. Without the
+   layer, unlayered `.btn { background: #fff }` beats the utility and the active
+   tab's label renders white-on-white (invisible). */
+@layer components {
+  .card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem;
+  }
+
+  .btn {
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 0.5rem 0.75rem;
+    background: #fff;
+    cursor: pointer;
+  }
+
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}

@@ -1,0 +1,105 @@
+# SAMBA Golden Scenario g07 — Multi-Objective Optimisation (Cost + Emissions)
+#
+# PURPOSE: Verify that a non-zero emissions_weight shifts the optimum toward
+#          lower DG usage at the cost of higher NPC (Phase 12 feature).
+#
+# Topology: PV (investment) + Battery (investment) + DG (8 kW fixed),
+#           off-grid, Inverter (investment)
+# Location: San Francisco, CA (same NSRDB weather as g01-g05)
+# Year:     2023
+#
+# Key fields:
+#   objective.type: cost_and_emissions
+#   objective.emissions_weight: 50.0  ($/kg CO₂ — significant carbon price)
+#   diesel_generator.co2_per_liter_kg: 2.29
+#
+# Sanity checks encoded in test_v2_goldens.py:
+#   - total_emissions_kg[w=50] < total_emissions_kg[w=0]  (larger weight → less DG)
+#   - npc[w=50] > npc[w=0]  (reducing emissions costs money)
+
+schema_version: "1.1"
+
+project:
+  name: "g07 — Multi-Objective Cost+Emissions (PV+Batt+DG, off-grid)"
+  year: 2023
+  lifetime_years: 20
+  discount_rate_nominal: 0.06
+  inflation_rate: 0.02
+  re_incentive_rate: 0.0
+  grid_escalation_rate: 0.0
+  budget: null
+  currency: "USD"
+  capex_year: 0
+
+location:
+  latitude: 37.77
+  longitude: -122.42
+  altitude_m: 0.0
+  timezone: "America/Los_Angeles"
+
+weather:
+  source: "csv"
+  csv_path: "../../../examples/content/weather_sf_2019.csv"
+
+load:
+  source: "hourly_csv"
+  csv_path: "../../../examples/content/load_residential_8760.csv"
+
+components:
+
+  pv:
+    enabled: true
+    capacity_kw: null
+    capex_per_kw: 2368.0
+    opex_per_kw_yr: 30.36
+    lifetime_years: 25
+    derating_factor: 0.90
+    tilt_deg: 33.0
+    azimuth_deg: 180.0
+    module_type: "monofacial"
+    noct_celsius: 45.0
+    temp_coeff_pmax: -0.003
+
+  battery:
+    enabled: true
+    capacity_kwh: null
+    chemistry: "li_ion"
+    capex_per_kwh: 1450.0
+    opex_per_kwh_yr: 10.0
+    lifetime_years: 10
+    soc_min: 0.10
+    soc_max: 1.00
+    soc_initial: 0.50
+    charge_efficiency: 0.9487
+    discharge_efficiency: 0.9487
+    c_rate_charge: 1.0
+    c_rate_discharge: 1.0
+
+  inverter:
+    capacity_kw: null
+    capex_per_kw: 300.0
+    opex_per_kw_yr: 5.0
+    lifetime_years: 10
+    efficiency: 0.96
+
+  diesel_generator:
+    enabled: true
+    capacity_kw: 8.0
+    capex_per_kw: 818.0
+    opex_per_kw_yr: 14.0
+    lifetime_years: 15
+    fuel_price_per_l: 1.281
+    fuel_lhv_kwh_per_l: 9.9
+    slope_l_per_kwh: 0.4388
+    intercept_l_per_kw_hr: 0.1097
+    min_load_fraction: 0.0            # LP-friendly: no NonConvexFlow (multi-obj test focus)
+    co2_per_liter_kg: 2.29
+
+tariff:
+  buy:
+    type: "flat"
+    rate_per_kwh: 0.0          # off-grid: no grid import
+
+objective:
+  type: "cost_and_emissions"
+  emissions_weight: 50.0       # $/kg CO₂

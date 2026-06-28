@@ -1,0 +1,121 @@
+# SAMBA Golden Scenario g15 — Heat Pump + Thermal Storage (TOU time-shifting)
+#
+# PURPOSE: Verify that thermal storage enables off-peak HP operation to reduce
+#          electricity cost under a TOU tariff.
+#
+# Topology: Grid (20 kW) + HP (heating_only, catalog_auto) + TS (investment) + Inverter
+# Year:     2023
+#
+# TOU tariff:
+#   Off-peak  22:00–06:00 (hours 22,23,0,1,2,3,4,5): $0.08/kWh
+#   On-peak   06:00–22:00 (hours 6–21):              $0.25/kWh
+#
+# Thermal load: degree-day model, UA=0.3 kW/K, heating setpoint 20°C
+# Expected behaviour:
+#   - HP runs predominantly off-peak (cheap hours)
+#   - Storage accumulates heat at night, discharges during day
+#   - NPC lower than reference run without storage
+#
+# Key invariants:
+#   - thermal_lpsp_heating = 0.0
+#   - annual_heat_produced_kwh > 0
+#   - HP operates at least partly in off-peak hours
+
+schema_version: "2.0"
+
+project:
+  name: "g15 — HP + Thermal Storage TOU: off-peak thermal shifting"
+  year: 2023
+  lifetime_years: 15
+  discount_rate_nominal: 0.06
+  inflation_rate: 0.02
+  re_incentive_rate: 0.0
+  grid_escalation_rate: 0.0
+  budget: null
+  currency: "USD"
+  capex_year: 0
+
+location:
+  latitude: 37.77
+  longitude: -122.42
+  altitude_m: 0.0
+  timezone: "America/Los_Angeles"
+
+weather:
+  source: "csv"
+  csv_path: "../../../examples/content/weather_sf_2019.csv"
+
+load:
+  source: "generic_annual_total"
+  annual_kwh: 6000.0
+  peak_month: "January"
+  thermal:
+    enabled: true
+    source: "csv"
+    heating_csv_path: "heating_5kw.csv"   # 8760 rows, constant 5.0 kW_th — no cooling demand
+
+components:
+
+  inverter:
+    capacity_kw: null
+    capex_per_kw: 314.0
+    opex_per_kw_yr: 0.0
+    lifetime_years: 25
+    efficiency: 0.96
+
+  grid:
+    enabled: true
+    capacity_kw: 20.0
+    export_allowed: false
+    capex: 0.0
+    opex_yr: 0.0
+
+  heat_pump:
+    enabled: true
+    mode: "heating_only"
+    sizing: "catalog_auto"
+    cop_source: "catalog"
+    capex: 4000.0
+    opex_per_year: 150.0
+    lifetime_years: 15
+
+  thermal_storage:
+    enabled: true
+    sizing: "investment"
+    capacity_min_kwh_th: 0.0
+    capacity_max_kwh_th: 100.0
+    loss_rate_per_hour: 0.002
+    soc_min: 0.05
+    soc_max: 0.95
+    soc_initial: 0.5
+    capex_per_kwh_th: 15.0
+    opex_per_year: 0.0
+    lifetime_years: 20
+
+tariff:
+  buy:
+    type: "tou"
+    tou_schedule:
+      - name: "off_peak"
+        months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        weekday: true
+        weekend: true
+        hours: [22, 23, 0, 1, 2, 3, 4, 5]
+        rate_per_kwh: 0.08
+      - name: "on_peak"
+        months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        weekday: true
+        weekend: true
+        hours: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
+        rate_per_kwh: 0.25
+
+  service_charge:
+    type: "flat"
+    monthly_flat: 10.0
+
+constraints:
+  max_lpsp: 0.001
+  thermal_lpsp_max: 0.0
+
+objective:
+  type: "cost"

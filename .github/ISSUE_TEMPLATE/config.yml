@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/sambaenergies/samba/tree/main/docs
+    about: Getting started, scenario reference, and CLI/API guides.
+  - name: Security vulnerability
+    url: https://github.com/sambaenergies/samba/security/advisories/new
+    about: Report security issues privately — do not open a public issue.

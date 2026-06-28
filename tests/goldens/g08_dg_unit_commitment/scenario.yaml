@@ -1,0 +1,109 @@
+# SAMBA Golden Scenario g08 — Diesel Generator Economics (Phase 14 DG UC feature)
+#
+# PURPOSE: Lock DG economic KPIs: fuel consumption, operating hours, emissions,
+#          and NPC for a well-characterised off-grid PV+Battery+DG scenario.
+#
+# NOTE ON MILP: The unit-commitment MILP (min_up_hours / min_down_hours) is
+# verified at the 168-hour timescale in tests/integration/test_dg_milp.py.
+# Full-year (8760h) MILP DG is currently infeasible in samba.run due to a
+# known oemof-solph/Pyomo startup_costs expression conflict at 8760 timesteps.
+# This golden uses pure LP (min_up_hours=0, min_down_hours=0) to produce a
+# stable, reproducible reference that validates DG fuel/emissions accounting.
+#
+# Topology: PV (investment) + Battery (investment) + DG (10 kW fixed),
+#           off-grid. Inverter (investment).
+# Location: San Francisco, CA
+# Year:     2023
+#
+# Sanity checks encoded in test_v2_goldens.py:
+#   - dg_fuel_consumption_liters > 0  (DG actively used as backup)
+#   - total_emissions_kg > 0
+#   - renewable_fraction > 0  (PV covers most of load)
+
+schema_version: "1.1"
+
+project:
+  name: "g08 — DG Economics (PV+Batt+DG, off-grid, LP, Phase 14 reference)"
+  year: 2023
+  lifetime_years: 15
+  discount_rate_nominal: 0.06
+  inflation_rate: 0.02
+  re_incentive_rate: 0.0
+  grid_escalation_rate: 0.0
+  budget: null
+  currency: "USD"
+  capex_year: 0
+
+location:
+  latitude: 37.77
+  longitude: -122.42
+  altitude_m: 0.0
+  timezone: "America/Los_Angeles"
+
+weather:
+  source: "csv"
+  csv_path: "../../../examples/content/weather_sf_2019.csv"
+
+load:
+  source: "generic_annual_total"
+  annual_kwh: 4380.0               # ≈0.5 kW average; peak ≈1.5 kW with generic shape
+  peak_month: "July"
+
+components:
+
+  pv:
+    enabled: true
+    capacity_kw: null
+    capex_per_kw: 2368.0
+    opex_per_kw_yr: 30.36
+    lifetime_years: 25
+    derating_factor: 0.90
+    tilt_deg: 33.0
+    azimuth_deg: 180.0
+    module_type: "monofacial"
+    noct_celsius: 45.0
+    temp_coeff_pmax: -0.003
+
+  battery:
+    enabled: true
+    capacity_kwh: null             # design variable
+    chemistry: "li_ion"
+    capex_per_kwh: 1450.0
+    opex_per_kwh_yr: 10.0
+    lifetime_years: 10
+    soc_min: 0.10
+    soc_max: 1.00
+    soc_initial: 0.50
+    charge_efficiency: 0.9487
+    discharge_efficiency: 0.9487
+    c_rate_charge: 1.0
+    c_rate_discharge: 1.0
+
+  inverter:
+    capacity_kw: null              # design variable
+    capex_per_kw: 300.0
+    opex_per_kw_yr: 5.0
+    lifetime_years: 10
+    efficiency: 0.96
+
+  diesel_generator:
+    enabled: true
+    capacity_kw: 10.0              # fixed 10 kW backup DG
+    capex_per_kw: 818.0
+    opex_per_kw_yr: 14.0
+    lifetime_years: 15
+    fuel_price_per_l: 1.281
+    fuel_lhv_kwh_per_l: 9.9
+    slope_l_per_kwh: 0.4388
+    intercept_l_per_kw_hr: 0.1097
+    min_load_fraction: 0.0         # LP: no NonConvex binary
+    co2_per_liter_kg: 2.63
+    # min_up_hours/min_down_hours validated at 168h in test_dg_milp.py
+    min_up_hours: 0
+    min_down_hours: 0
+    startup_cost: 0.0
+
+tariff:
+  buy:
+    type: "flat"
+    rate_per_kwh: 0.0              # off-grid: no grid import

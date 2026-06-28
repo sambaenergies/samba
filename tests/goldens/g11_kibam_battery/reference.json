@@ -1,0 +1,72 @@
+{
+  "scenario": "g11_kibam_battery",
+  "description": "Off-grid PV + KiBaM lead-acid battery (Phase 16): kinetic battery model with c_rate and available charge partitioning.",
+  "source": "samba_lp",
+  "samba_version": "2.0.0",
+  "run_date": "2026-03-03",
+  "notes": "KiBaM chemistry=kibam with c_rate_charge=0.20 and soc_min=0.40. Post-validation reports 8 timestep Q1 violations (LP relaxation allows slight infeasibility near low SOC); result is still valid for golden purposes. Battery is ~4.5x larger than equivalent lithium-ion g06 due to DoD restriction and c-rate limit.",
+  "kpis": {
+    "npc": 132302.7809,
+    "lcoe": 1.839342,
+    "pv_kw": 19.6509,
+    "battery_kwh": 93.6416,
+    "inverter_kw": 1.29,
+    "annual_pv_kwh": 32690.2554,
+    "renewable_fraction": 1.0,
+    "annual_diesel_l": 0.0,
+    "total_grid_bought": 0.0,
+    "lpsp": 0.0
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "pv_kw": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "\u00b115% \u2014 LP continuous sizing"
+    },
+    "battery_kwh": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "\u00b115% \u2014 KiBaM sizing includes Q1/Q2 partitioning"
+    },
+    "inverter_kw": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "\u00b115%"
+    },
+    "annual_pv_kwh": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.05,
+      "note": "\u00b10.05 absolute"
+    },
+    "annual_diesel_l": {
+      "type": "absolute",
+      "value": 20.0,
+      "note": "\u00b120 L absolute \u2014 expected 0"
+    },
+    "lpsp": {
+      "type": "absolute",
+      "value": 0.01,
+      "note": "\u00b10.01 absolute \u2014 off-grid must be near zero"
+    },
+    "total_grid_bought": {
+      "type": "absolute",
+      "value": 10.0,
+      "note": "\u00b110 kWh absolute \u2014 off-grid, expected 0"
+    }
+  }
+}

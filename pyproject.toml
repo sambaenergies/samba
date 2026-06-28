@@ -1,0 +1,104 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "samba-core"
+dynamic = ["version"]
+description = "Systems Advisor for Microgrids & Building Analysis"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+authors = [
+    { name = "SAMBA Contributors" },
+]
+keywords = ["microgrid", "energy", "optimization", "oemof"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering",
+]
+dependencies = [
+    "oemof-solph>=0.6.2,<0.7",  # 0.6.2: nominal_capacity API, minimum/maximum Flow kwargs, Results class; <0.7 until 0.7.x API verified
+    "pyomo>=6.0",
+    "highspy>=1.5",         # HiGHS LP/MIP solver — pip-installable, cross-platform
+    "pydantic>=2.0",
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "pyarrow>=12.0",
+    "pyyaml>=6.0",
+    "pvlib>=0.15.1",
+]
+
+[project.optional-dependencies]
+cli     = ["typer>=0.9", "rich>=13.0"]
+service = ["fastapi>=0.100", "uvicorn[standard]>=0.23", "httpx>=0.24"]
+
+# Development tooling lives in a PEP 735 dependency group (uv-native), not a
+# user-facing extra. Install with `uv sync --all-extras` (includes this group).
+[dependency-groups]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov",
+    "ruff",
+    "mypy",
+    "types-PyYAML",
+    "pre-commit",
+    "httpx>=0.24",
+]
+
+[project.scripts]
+samba = "samba_cli.main:app"
+
+# Single source of truth for the version (audit/v4 tech debt): read from
+# samba/_version.py so one edit suffices.
+[tool.hatch.version]
+path = "samba/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["samba", "samba_cli", "samba_service"]
+
+# ---------------------------------------------------------------------------
+# Ruff
+# ---------------------------------------------------------------------------
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+exclude = ["_reference"]
+
+[tool.ruff.lint]
+# S101 bans `assert` in production code: asserts are stripped under `python -O`,
+# so they must not be used as runtime guards (audit item C2). Tests and ad-hoc
+# diagnostic scripts are exempt below.
+select = ["E", "W", "F", "I", "UP", "A", "B", "C4", "SIM", "S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+"scripts/**" = ["S101"]
+
+# ---------------------------------------------------------------------------
+# Mypy
+# ---------------------------------------------------------------------------
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+exclude = ["^_reference/"]
+
+# ---------------------------------------------------------------------------
+# Pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--tb=short -m 'not benchmark'"
+markers = [
+    "benchmark: slow golden scenario benchmarks (deselect with '-m not benchmark')",
+    "integration: integration tests requiring solver",
+    "milp: integration tests that exercise MILP (NonConvex) paths",
+    "slow: tests that take > 10 s (deselect with '-m not slow')",
+]

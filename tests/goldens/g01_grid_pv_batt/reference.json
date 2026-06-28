@@ -1,0 +1,60 @@
+{
+  "scenario": "g01_grid_pv_batt",
+  "description": "Grid-tied PV + Battery (design variable), TOU tariff, San Francisco CA",
+  "source": "samba_lp",
+  "samba_version": "post-bugfix-ABC",
+  "run_date": "2026-03-03",
+  "notes": "Pure-SAMBA LP baseline. The LP installs the minimum PV needed to satisfy the 50% renewable-fraction constraint and no battery (too expensive vs grid), so NPC sits above the grid-only case because the RE constraint is binding.",
+  "kpis": {
+    "npc": 35109.2645,
+    "lcoe": 0.360525,
+    "pv_kw": 2.3783,
+    "battery_kwh": 0.0,
+    "inverter_kw": 1.7922,
+    "annual_pv_kwh": 3956.4366,
+    "renewable_fraction": 0.522035,
+    "annual_diesel_l": 0.0
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110% \u2014 LP regression gate; solver/float variation across machines"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "pv_kw": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "\u00b115% \u2014 LP continuous sizing"
+    },
+    "battery_kwh": {
+      "type": "absolute",
+      "value": 5.0,
+      "note": "\u00b15 kWh absolute \u2014 ref=0 so relative is undefined"
+    },
+    "inverter_kw": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "\u00b115%"
+    },
+    "annual_pv_kwh": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.05,
+      "note": "\u00b10.05 absolute. KPI uses pv_dc*eta/total_generation; constraint uses pv_dc*eta/load. KPI~0.52 when constraint binds at 0.50."
+    },
+    "annual_diesel_l": {
+      "type": "absolute",
+      "value": 50.0,
+      "note": "\u00b150 L absolute \u2014 no DG in this scenario"
+    }
+  }
+}

@@ -1,0 +1,100 @@
+# SAMBA Golden Scenario g04 — Off-grid PV + Wind + Battery
+#
+# Topology: PV (investment) + Wind turbine (1×generic_10kw, fixed count)
+#           + Battery (investment) + Inverter (investment); NO grid, NO diesel
+# Location: San Francisco, CA, USA
+# Tariff:   None (off-grid)
+# Year:     2013
+#
+# Reference: Physics-based estimate (source="estimated" in reference.json).
+
+schema_version: "1.0"
+
+project:
+  name: "g04 — Off-grid PV + Wind + Battery"
+  year: 2013
+  lifetime_years: 25
+  discount_rate_nominal: 0.045
+  inflation_rate: 0.02
+  re_incentive_rate: 0.0
+  budget: null
+  currency: "USD"
+  capex_year: 0
+
+location:
+  latitude: 37.77
+  longitude: -122.42
+  altitude_m: 0.0
+  timezone: "America/Los_Angeles"
+
+weather:
+  source: "csv"
+  csv_path: "../../../examples/content/weather_sf_2019.csv"
+
+load:
+  source: "hourly_csv"
+  csv_path: "../../../examples/content/load_residential_8760.csv"
+
+components:
+
+  pv:
+    enabled: true
+    capacity_kw: null
+    capex_per_kw: 2368.0
+    opex_per_kw_yr: 30.36
+    lifetime_years: 25
+    derating_factor: 0.90
+    tilt_deg: 33.0
+    azimuth_deg: 180.0
+    module_type: "monofacial"
+    noct_celsius: 45.0
+    temp_coeff_pmax: -0.003
+
+  wind_turbine:
+    enabled: true
+    count: 1                       # fixed unit count in v1
+    turbine_model: "generic_10kw"  # 10 kW rated, cut-in=2.5m/s, rated=12m/s, cut-out=25m/s
+    hub_height_m: 30.0             # hub height for wind speed extrapolation from 10m
+    capex_per_unit: 12000.0
+    opex_per_unit_yr: 400.0
+    lifetime_years: 20             # typical small wind turbine
+
+  battery:
+    enabled: true
+    capacity_kwh: null
+    chemistry: "li_ion"
+    capex_per_kwh: 1450.0
+    opex_per_kwh_yr: 10.0
+    lifetime_years: 10
+    soc_min: 0.10
+    soc_max: 1.00
+    soc_initial: 0.50
+    charge_efficiency: 0.9487
+    discharge_efficiency: 0.9487
+    c_rate_charge: 1.0
+    c_rate_discharge: 1.0
+
+  inverter:
+    capacity_kw: null
+    capex_per_kw: 314.0
+    opex_per_kw_yr: 0.0
+    lifetime_years: 25
+    efficiency: 0.96
+
+  # No grid, no diesel — fully renewable off-grid
+
+tariff:
+  buy:
+    type: "flat"
+    rate_per_kwh: 0.0              # off-grid placeholder
+
+constraints:
+  # Off-grid with no backup DG: must serve all load
+  max_lpsp: 0.001
+  min_renewable_fraction: 0.0     # trivially satisfied (100% renewable)
+  max_annual_diesel_l: null
+  max_battery_cycles_yr: null
+  force_grid_disconnect: false
+
+objective:
+  type: "cost"

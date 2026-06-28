@@ -1,0 +1,92 @@
+# SAMBA Golden Scenario g09 — EV Smart Charging (No V2G)
+#
+# PURPOSE: Verify that the EV charges only during the presence window,
+#          achieves departure SOC, and uses cheap off-peak hours when
+#          TOU pricing is present (Phase 15 feature).
+#
+# Topology: Grid (25 kW) + EV (charge-only), grid-tied.
+#           No PV, no battery — isolates EV smart-charging behaviour.
+# Location: San Francisco, CA
+# Year:     2023  (TOU day-of-week resolved against calendar)
+#
+# Key fields:
+#   components.ev.v2g_enabled: false
+#   tariff.buy.type: tou  (off-peak $0.10 hours 0-5 & 22-23;
+#                           peak  $0.25 hours 6-21)
+#
+# Sanity checks encoded in test_v2_goldens.py:
+#   - ev_charge_kw == 0 for all away hours (presence = 0)
+#   - Mean hour of charge is in the off-peak window (22:00–06:00)
+
+schema_version: "1.1"
+
+project:
+  name: "g09 — EV Smart Charging, TOU, No V2G"
+  year: 2023
+  lifetime_years: 10
+  discount_rate_nominal: 0.06
+  inflation_rate: 0.02
+  re_incentive_rate: 0.0
+  grid_escalation_rate: 0.0
+  budget: null
+  currency: "USD"
+  capex_year: 0
+
+location:
+  latitude: 37.77
+  longitude: -122.42
+  altitude_m: 0.0
+  timezone: "America/Los_Angeles"
+
+weather:
+  source: "csv"
+  csv_path: "../../../examples/content/weather_sf_2019.csv"
+
+load:
+  source: "generic_annual_total"
+  annual_kwh: 5000.0
+  peak_month: "July"
+
+components:
+
+  inverter:
+    capacity_kw: 1.0              # small fixed inverter — no PV/battery; cost ≈ 0
+    capex_per_kw: 0.0
+    opex_per_kw_yr: 0.0
+    lifetime_years: 10
+    efficiency: 0.96
+
+  grid:
+    capacity_kw: 25.0             # large enough for load + EV charging simultaneously
+
+  ev:
+    enabled: true
+    capacity_kwh: 60.0
+    max_charge_kw: 7.4
+    max_discharge_kw: 0.0         # no V2G
+    soc_min: 0.10
+    soc_max: 1.00
+    soc_initial: 0.50
+    soc_departure: 0.80           # must reach 80% by 08:00 departure
+    soc_arrival: 0.30             # arrives home at 30% each evening
+    charge_efficiency: 0.92
+    discharge_efficiency: 0.92
+    v2g_enabled: false
+    presence_source: "schedule"
+    arrival_hour: 18              # returns home at 18:00
+    departure_hour: 8             # leaves at 08:00
+    workdays_per_week: 5          # Mon–Fri commute
+    capex: 0.0
+    opex_per_year: 0.0
+    lifetime_years: 10
+
+tariff:
+  buy:
+    type: "tou"
+    tou_schedule:
+      - name: "off_peak"
+        hours: [0, 1, 2, 3, 4, 5, 22, 23]
+        rate_per_kwh: 0.10        # cheap overnight — EV should prefer these hours
+      - name: "peak"
+        hours: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
+        rate_per_kwh: 0.25        # expensive daytime

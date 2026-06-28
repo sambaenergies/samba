@@ -1,0 +1,131 @@
+# SAMBA — Grid + PV + Heat Pump with a DATASET-fitted COP (opt-in demo)
+#
+# Companion to grid_pv_heat_pump.yaml. That example uses the default
+# physics-based (Carnot-fraction) COP model; this one demonstrates the
+# OPT-IN `cop_source: "dataset"` path, fitting COP(T) curves from a curated CSV
+# of rating points instead of first principles.
+#
+# The dataset used here — content/cop_ashp_reference.csv — is SAMBA's committed,
+# license-clean REPRESENTATIVE reference (typical published AHRI rating-point
+# values; NOT a specific manufacturer's data and NOT the shipped default). For
+# real-population fidelity, fetch a current dataset locally with
+# `samba fetch-cop-data` (e.g. the NEEP cold-climate ASHP list) and point
+# `cop_dataset_path` at the result — but keep that file local: third-party
+# performance data is generally not redistributable. See docs/thermal-components.md.
+#
+# A degree-day thermal load is included so the heat pump actually dispatches and
+# the fitted COP curve visibly drives electricity use.
+#
+# Units: kW, kWh, USD, °C
+
+schema_version: "2.0"
+
+project:
+  name: "Grid + PV + Heat Pump (dataset COP)"
+  year: 2019
+  lifetime_years: 20
+  discount_rate_nominal: 0.07
+  inflation_rate: 0.025
+  re_incentive_rate: 0.0
+  budget: null
+  currency: "USD"
+  capex_year: 0
+
+location:
+  latitude: 37.77                 # San Francisco, CA
+  longitude: -122.42
+  altitude_m: 32.0
+  timezone: "America/Los_Angeles"
+
+weather:
+  source: "csv"
+  csv_path: "content/weather_sf_2019.csv"   # NSRDB-format CSV; required for HP COP curves
+
+# Electrical base load plus a degree-day thermal load (space heating + cooling).
+load:
+  source: "generic_annual_total"
+  annual_kwh: 6000.0
+  peak_month: "January"
+  thermal:
+    enabled: true
+    source: "degree_day"
+    building_ua_kw_per_k: 0.5
+    heating_setpoint_c: 20.0
+    cooling_setpoint_c: 26.0
+    distribution_efficiency: 0.95
+
+components:
+
+  inverter:
+    capacity_kw: null             # null → solver chooses size
+    capex_per_kw: 300.0
+    opex_per_kw_yr: 6.0
+    lifetime_years: 15
+    efficiency: 0.97
+
+  pv:
+    enabled: true
+    capacity_kw: null             # null → solver chooses
+    capex_per_kw: 900.0
+    opex_per_kw_yr: 10.0
+    lifetime_years: 25
+    tilt_deg: 35.0
+    azimuth_deg: 180.0            # 180 = south
+    module_type: "monofacial"
+    derating_factor: 0.86
+
+  grid:
+    enabled: true
+    capacity_kw: 20.0
+    export_allowed: true
+    export_capacity_kw: 16.0
+    emission_factor_kg_per_kwh: 0.233
+
+  heat_pump:
+    enabled: true
+    mode: "both"                  # "both" | "heating_only" | "cooling_only"
+    sizing: "catalog_auto"        # smallest catalog model meeting peak thermal demand
+
+    # COP model — the opt-in dataset path:
+    #   "catalog" = physics-based Carnot-fraction COP (the default)
+    #   "fixed"   = constant COP via fixed_cop_heating / fixed_cop_cooling
+    #   "dataset" = fit COP(T) from a curated CSV of rating points (this example)
+    cop_source: "dataset"
+    cop_dataset_path: "content/cop_ashp_reference.csv"   # relative to this file
+
+    indoor_design_temp_c: 22.22
+    indoor_humidity_ratio: 0.005
+    standby_power_kw: 0.0
+
+    capex: 8000.0
+    opex_per_year: 160.0
+    lifetime_years: 15
+
+tariff:
+  buy:
+    type: "tou"
+    tou_schedule:
+      - name: "off_peak"
+        months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        weekday: true
+        weekend: true
+        hours: [0, 1, 2, 3, 4, 5, 6, 7]
+        rate_per_kwh: 0.10
+      - name: "on_peak"
+        months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        weekday: true
+        weekend: true
+        hours: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+        rate_per_kwh: 0.28
+  sell:
+    type: "flat"
+    rate_per_kwh: 0.05
+  service_charge:
+    type: "flat"
+    monthly_flat: 9.0
+
+constraints:
+  thermal_lpsp_max: 0.0
+
+objective:
+  type: "cost"

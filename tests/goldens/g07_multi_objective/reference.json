@@ -1,0 +1,78 @@
+{
+  "scenario": "g07_multi_objective",
+  "description": "Off-grid PV + Battery + DG: multi-objective cost+emissions optimisation (Phase 12). Demonstrates emissions_weight=50 producing a de-carbonised solution.",
+  "source": "samba_lp",
+  "samba_version": "2.0.0",
+  "run_date": "2026-03-03",
+  "notes": "LP multi-objective with emissions_weight=50. DG runs only 61 hours/yr (near-zero diesel). min_load_fraction=0.0 keeps the model LP-safe (no NonConvex).",
+  "kpis": {
+    "npc": 126561.5865,
+    "lcoe": 1.759525,
+    "pv_kw": 22.3683,
+    "battery_kwh": 22.5548,
+    "inverter_kw": 1.2898,
+    "annual_pv_kwh": 37210.6786,
+    "renewable_fraction": 0.99946,
+    "annual_diesel_l": 39.1792,
+    "total_emissions_kg": 89.7204,
+    "total_grid_bought": 0.0,
+    "dg_operating_hours": 35.0
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "pv_kw": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "\u00b115% \u2014 LP continuous sizing"
+    },
+    "battery_kwh": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "\u00b115%"
+    },
+    "inverter_kw": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "\u00b115%"
+    },
+    "annual_pv_kwh": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.05,
+      "note": "\u00b10.05 absolute"
+    },
+    "annual_diesel_l": {
+      "type": "relative",
+      "value": 0.2,
+      "note": "\u00b120% \u2014 small diesel consumption, sensitive to LP optimum"
+    },
+    "total_emissions_kg": {
+      "type": "relative",
+      "value": 0.2,
+      "note": "\u00b120% \u2014 proportional to diesel"
+    },
+    "dg_operating_hours": {
+      "type": "absolute",
+      "value": 20,
+      "note": "\u00b120 hours absolute \u2014 small DG usage"
+    },
+    "total_grid_bought": {
+      "type": "absolute",
+      "value": 50.0,
+      "note": "\u00b150 kWh absolute \u2014 off-grid, expected 0"
+    }
+  }
+}
