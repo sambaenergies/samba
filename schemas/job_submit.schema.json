@@ -1,0 +1,25 @@
+{
+  "description": "Response body for ''POST /api/v1/jobs'' (HTTP 202 Accepted).\n\nAttributes\n----------\nrun_id:\n    UUID4 string identifying the submitted job.\nstatus:\n    Initial status -- always ''\"pending\"'' immediately after submission.\npoll_url:\n    Relative URL for polling job state:\n    ''/api/v1/jobs/{run_id}''.",
+  "properties": {
+    "poll_url": {
+      "title": "Poll Url",
+      "type": "string"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "status": {
+      "const": "pending",
+      "default": "pending",
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "run_id",
+    "poll_url"
+  ],
+  "title": "JobSubmitResponse",
+  "type": "object"
+}

@@ -25,8 +25,10 @@ from samba.run_result.contracts import (
 )
 from samba.scenario.models import Scenario
 from samba_service.models import (
+    ErrorResponse,
     HealthResponse,
     JobStatusResponse,
+    JobSubmitResponse,
     ValidateResponse,
 )
 
@@ -45,6 +47,8 @@ _MODELS = {
     "health.schema.json": HealthResponse,
     "validate.schema.json": ValidateResponse,
     "job.schema.json": JobStatusResponse,
+    "job_submit.schema.json": JobSubmitResponse,
+    "error.schema.json": ErrorResponse,
 }
 
 

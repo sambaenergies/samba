@@ -8,10 +8,19 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from samba.run_result.contracts import KpiSummary, SizingRow
 from samba_service.jobs import JobStatus
+
+# The request ``scenario`` stays a permissive mapping (so a bad scenario yields a
+# structured 200/422 body, not a generic request-shape rejection); this advertises
+# the real shape in the OpenAPI contract without constraining the field.
+_SCENARIO_FIELD_DESCRIPTION = (
+    "Scenario mapping with the same structure as a scenario YAML file "
+    "(schema_version, project, location, load, components, tariff, ...). Validated "
+    "against the SAMBA Scenario model; see scenario.schema.json for the full shape."
+)
 
 # ---------------------------------------------------------------------------
 # Errors
@@ -52,7 +61,7 @@ class ValidateRequest(BaseModel):
         Raw scenario mapping to validate against the SAMBA schema.
     """
 
-    scenario: dict[str, Any]
+    scenario: dict[str, Any] = Field(description=_SCENARIO_FIELD_DESCRIPTION)
 
 
 class ValidateResponse(BaseModel):
@@ -137,7 +146,7 @@ class JobSubmitRequest(BaseModel):
         the service creates a subdirectory named by the job's ''run_id''.
     """
 
-    scenario: dict[str, Any]
+    scenario: dict[str, Any] = Field(description=_SCENARIO_FIELD_DESCRIPTION)
     run_dir_name: str | None = None
 
 
@@ -156,7 +165,7 @@ class JobSubmitResponse(BaseModel):
     """
 
     run_id: str
-    status: str = "pending"
+    status: Literal["pending"] = "pending"
     poll_url: str
 
 
@@ -200,26 +209,3 @@ class JobStatusResponse(BaseModel):
     artifacts: list[str] = []
     error: str | None = None
     solve_time_s: float | None = None
-
-
-# ---------------------------------------------------------------------------
-# Kept for backward compatibility with v1 synchronous test_service.py
-# ---------------------------------------------------------------------------
-
-
-class RunRequest(BaseModel):
-    """[Deprecated - v1 only] Request body for ''POST /api/v1/run''."""
-
-    scenario: dict[str, Any]
-    run_dir_name: str | None = None
-
-
-class RunResponse(BaseModel):
-    """[Deprecated - v1 only] Response body for ''POST /api/v1/run''."""
-
-    status: Literal["ok", "infeasible", "error"]
-    run_dir: str | None = None
-    kpis: dict[str, Any] | None = None
-    sizing: list[dict[str, Any]] | None = None
-    error: str | None = None
-    error_code: int | None = None
