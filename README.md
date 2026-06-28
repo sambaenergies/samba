@@ -10,7 +10,7 @@
 **Systems Advisor for Microgrids & Building Analysis** — optimal sizing and
 techno-economic analysis of hybrid energy systems.
 
-[![CI](https://github.com/CameronBrooks11/samba/actions/workflows/ci.yml/badge.svg)](https://github.com/CameronBrooks11/samba/actions/workflows/ci.yml)
+[![CI](https://github.com/sambaenergies/samba/actions/workflows/ci.yml/badge.svg)](https://github.com/sambaenergies/samba/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/samba-core)](https://pypi.org/project/samba-core/)
 [![License: MPL 2.0](https://img.shields.io/badge/license-MPL--2.0-brightgreen)](https://mozilla.org/MPL/2.0/)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
@@ -79,7 +79,7 @@ cd ui && npm install && npm run dev    # UI on http://localhost:1420
 See [CONTRIBUTING.md](CONTRIBUTING.md). Development uses [uv](https://docs.astral.sh/uv/):
 
 ```bash
-git clone https://github.com/CameronBrooks11/samba.git
+git clone https://github.com/sambaenergies/samba.git
 cd samba && uv sync --all-extras
 ```
 

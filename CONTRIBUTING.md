@@ -10,7 +10,7 @@ SAMBA uses [uv](https://docs.astral.sh/uv/) for environment and dependency
 management.
 
 ```bash
-git clone https://github.com/CameronBrooks11/samba.git
+git clone https://github.com/sambaenergies/samba.git
 cd samba
 uv sync --all-extras       # creates .venv with dev group + cli + service extras
 uv run pre-commit install

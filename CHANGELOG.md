@@ -359,13 +359,13 @@ all v1/v2 scenarios remain valid.
 - Electrical loads only; thermal and EV deferred to v2/v3.
 - DG binary on/off constraints require MILP (v2); v1 uses LP relaxation.
 
-[Unreleased]: https://github.com/CameronBrooks11/samba/compare/v5.3.0...HEAD
-[5.3.0]: https://github.com/CameronBrooks11/samba/compare/v5.2.0...v5.3.0
-[5.2.0]: https://github.com/CameronBrooks11/samba/compare/v5.1.0...v5.2.0
-[5.1.0]: https://github.com/CameronBrooks11/samba/compare/v5.0.0...v5.1.0
-[5.0.0]: https://github.com/CameronBrooks11/samba/compare/v4.0.0...v5.0.0
-[4.0.0]: https://github.com/CameronBrooks11/samba/compare/v3.0.1...v4.0.0
-[3.0.1]: https://github.com/CameronBrooks11/samba/compare/v3.0.0...v3.0.1
-[3.0.0]: https://github.com/CameronBrooks11/samba/compare/v2.0.0...v3.0.0
-[2.0.0]: https://github.com/CameronBrooks11/samba/compare/v1.0.0...v2.0.0
-[1.0.0]: https://github.com/CameronBrooks11/samba/releases/tag/v1.0.0
+[Unreleased]: https://github.com/sambaenergies/samba/compare/v5.3.0...HEAD
+[5.3.0]: https://github.com/sambaenergies/samba/compare/v5.2.0...v5.3.0
+[5.2.0]: https://github.com/sambaenergies/samba/compare/v5.1.0...v5.2.0
+[5.1.0]: https://github.com/sambaenergies/samba/compare/v5.0.0...v5.1.0
+[5.0.0]: https://github.com/sambaenergies/samba/compare/v4.0.0...v5.0.0
+[4.0.0]: https://github.com/sambaenergies/samba/compare/v3.0.1...v4.0.0
+[3.0.1]: https://github.com/sambaenergies/samba/compare/v3.0.0...v3.0.1
+[3.0.0]: https://github.com/sambaenergies/samba/compare/v2.0.0...v3.0.0
+[2.0.0]: https://github.com/sambaenergies/samba/compare/v1.0.0...v2.0.0
+[1.0.0]: https://github.com/sambaenergies/samba/releases/tag/v1.0.0

@@ -27,7 +27,7 @@ only need the Python API.
 SAMBA uses [uv](https://docs.astral.sh/uv/) for development environments:
 
 ```bash
-git clone https://github.com/CameronBrooks11/samba.git
+git clone https://github.com/sambaenergies/samba.git
 cd samba
 uv sync --all-extras            # creates .venv from uv.lock (dev + cli + service)
 uv run pre-commit install       # optional: installs ruff + mypy hooks
