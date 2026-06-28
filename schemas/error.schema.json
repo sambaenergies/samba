@@ -1,0 +1,29 @@
+{
+  "description": "Shared envelope for every non-2xx response.\n\nAttributes\n----------\ndetail:\n    Human-readable summary of the failure (the FastAPI default error key).\nerrors:\n    Optional per-item failure lines. For scenario-validation failures this\n    is ''ScenarioValidationError.format_errors().splitlines()'' -- the **same\n    list** ''POST /api/v1/validate'' returns in its 200 body for the same\n    input -- so a client can render field errors identically regardless of\n    which endpoint rejected the scenario. ''None'' for errors that have no\n    line-level breakdown (404 / 409 / 401 / generic 400).",
+  "properties": {
+    "detail": {
+      "title": "Detail",
+      "type": "string"
+    },
+    "errors": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Errors"
+    }
+  },
+  "required": [
+    "detail"
+  ],
+  "title": "ErrorResponse",
+  "type": "object"
+}
