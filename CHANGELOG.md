@@ -78,7 +78,7 @@ for the Python API and scenario schema.
 
 Polishes the data-driven heat-pump COP as an explicit **opt-in**, keeping the
 license-clean first-principles physics model as the shipped default (resolving the
-post-v5 "NEEP COP dataset promotion" question by deciding *not* to promote).
+post-v5 "NEEP COP dataset promotion" question by deciding _not_ to promote).
 Backwards-compatible; no behaviour change to existing scenarios.
 
 ### Added
@@ -162,9 +162,9 @@ primary authorities, which shifts golden KPI baselines, so it is a major version
   previous in-house implementation. Adds a `pvlib` runtime dependency. The NOCT
   cell-temperature, per-kWp power, and bifacial models are unchanged.
 - **KiBaM battery re-derived** from the primary source — Manwell & McGowan (1993),
-  *Solar Energy* 50(5) — using the published notation, with an inline citation.
+  _Solar Energy_ 50(5) — using the published notation, with an inline citation.
 - **Heat-pump COP re-sourced** to a physics-based Carnot-fraction model (Carnot limit ×
-  a practical second-law efficiency, per ASHRAE *Fundamentals*) with a Stull (2011)
+  a practical second-law efficiency, per ASHRAE _Fundamentals_) with a Stull (2011)
   wet-bulb approximation, replacing the prior manufacturer-regression coefficient tables
   and psychrometric constants. Catalog model labels are now generic (e.g. `ASHP-3ton`).
   COP is modelled as size-independent; catalog fidelity drops relative to the prior
@@ -347,8 +347,8 @@ all v1/v2 scenarios remain valid.
 
 - MILP unit-commitment (`min_up_hours > 0`) is only tested at 168-h horizon due to
   oemof-solph/Pyomo NonConvexFlowBlock interaction at 8760-h scale (see `test_dg_milp.py`).
-  *(Superseded 2026-06-13: the 8760-h MILP solves correctly under oemof-solph 0.6.4;
-  full-year unit-commitment regression added as `TestMILPFullYear`. See audit item C1.)*
+  _(Superseded 2026-06-13: the 8760-h MILP solves correctly under oemof-solph 0.6.4;
+  full-year unit-commitment regression added as `TestMILPFullYear`. See audit item C1.)_
 - KiBaM LP relaxation may produce up to ~10 timestep Q1 SOC violations; a post-validation
   warning is emitted; LPSP remains 0.
 
