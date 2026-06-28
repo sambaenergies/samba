@@ -1,0 +1,61 @@
+name: Bug report
+description: Report something that isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. Please search existing issues first, and do
+        not report security issues here — see the security policy.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, including what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps — ideally a small scenario YAML and the command or API call used.
+      placeholder: |
+        1. ...
+        2. ...
+      render: shell
+    validations:
+      required: true
+  - type: dropdown
+    id: interface
+    attributes:
+      label: Interface
+      description: Which way were you using SAMBA?
+      options:
+        - CLI
+        - Python API
+        - REST service (samba serve)
+        - Desktop / Web UI
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: SAMBA version / commit
+      description: Output of `samba info`, a release version, or a commit SHA.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, install method (pip / uv / source), and Python/Node versions if relevant.
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / output
+      description: Solver output, traceback, or a relevant `kpis.json` snippet.
+      render: shell
+    validations:
+      required: false
