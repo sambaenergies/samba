@@ -11,6 +11,30 @@ adjacent releases.
 
 _Nothing yet._
 
+## [5.3.1] - 2026-06-28
+
+Maintenance release: first publication to PyPI, dependency updates, and CI
+hardening. No functional or API changes.
+
+### Added
+
+- **Published to PyPI** — `pip install samba-core` (via OIDC Trusted Publishing).
+
+### Changed
+
+- **UI dependencies** updated to current majors: Vite 8 (rolldown bundler),
+  `@vitejs/plugin-vue` 6, vue-tsc 3, TypeScript 6, vue-router 5, js-yaml 5,
+  jsdom 29 — plus a non-major batch and lock-file maintenance that clears all
+  npm audit findings.
+- **CI** unified on the `just` recipes (`just check` / `just ui-check` / `just test`)
+  so the pipeline matches local exactly, restoring the schema-export drift gate
+  that the inlined workflow had omitted. GitHub Actions updated to current majors.
+
+### Removed
+
+- Unused `lucide-vue-next` dependency.
+- `@types/js-yaml` — js-yaml 5 ships its own type declarations.
+
 ## [5.3.0] - 2026-06-14
 
 Schema-first cutover: the backend Pydantic models become the single source of
@@ -359,7 +383,8 @@ all v1/v2 scenarios remain valid.
 - Electrical loads only; thermal and EV deferred to v2/v3.
 - DG binary on/off constraints require MILP (v2); v1 uses LP relaxation.
 
-[Unreleased]: https://github.com/sambaenergies/samba/compare/v5.3.0...HEAD
+[Unreleased]: https://github.com/sambaenergies/samba/compare/v5.3.1...HEAD
+[5.3.1]: https://github.com/sambaenergies/samba/releases/tag/v5.3.1
 [5.3.0]: https://github.com/sambaenergies/samba/compare/v5.2.0...v5.3.0
 [5.2.0]: https://github.com/sambaenergies/samba/compare/v5.1.0...v5.2.0
 [5.1.0]: https://github.com/sambaenergies/samba/compare/v5.0.0...v5.1.0
