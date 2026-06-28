@@ -36,10 +36,12 @@ import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any
 
-from fastapi import APIRouter, FastAPI, HTTPException, Query, Security
+from fastapi import APIRouter, FastAPI, HTTPException, Query, Request, Security
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import ValidationError
 
 from samba_service import jobs as _jobs
@@ -48,6 +50,7 @@ from samba_service.auth import verify_api_key
 from samba_service.config import config
 from samba_service.jobs import Job, JobStatus, generate_run_id, store, submit_job
 from samba_service.models import (
+    ErrorResponse,
     HealthResponse,
     JobStatusResponse,
     JobSubmitRequest,
@@ -123,6 +126,57 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
+# Error envelope
+# ---------------------------------------------------------------------------
+
+# Shared OpenAPI ``responses`` documenting that every non-2xx body is an
+# :class:`~samba_service.models.ErrorResponse`. Applied uniformly to all routes
+# so the published contract carries typed error shapes (consumers generate one
+# error type, not per-route guesses).
+ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
+    code: {"model": ErrorResponse} for code in (400, 401, 404, 409, 422, 500)
+}
+
+
+class ScenarioInvalidError(Exception):
+    """Raised when a submitted scenario fails Pydantic validation.
+
+    Carries the per-line error list so the handler can return the **same**
+    ``errors[]`` that ``POST /api/v1/validate`` reports for the same input.
+    """
+
+    def __init__(self, errors: list[str]) -> None:
+        super().__init__("Scenario validation failed.")
+        self.errors = errors
+
+
+def _error_body(detail: str, errors: list[str] | None = None) -> dict[str, Any]:
+    return ErrorResponse(detail=detail, errors=errors).model_dump()
+
+
+@app.exception_handler(ScenarioInvalidError)
+async def _scenario_invalid_handler(_request: Request, exc: ScenarioInvalidError) -> JSONResponse:
+    return JSONResponse(
+        status_code=422, content=_error_body("Scenario validation failed.", exc.errors)
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def _request_validation_handler(
+    _request: Request, exc: RequestValidationError
+) -> JSONResponse:
+    """Normalise FastAPI's default ``{detail: [..]}`` 422 into the shared envelope."""
+    lines = [_format_request_error(e) for e in exc.errors()]
+    return JSONResponse(status_code=422, content=_error_body("Request validation failed.", lines))
+
+
+def _format_request_error(err: dict[str, Any]) -> str:
+    loc = ".".join(str(p) for p in err.get("loc", ()) if p != "body")
+    msg = err.get("msg", "invalid")
+    return f"{loc}: {msg}" if loc else msg
+
+
+# ---------------------------------------------------------------------------
 # Shared router (prefix + auth dependency applied to all protected endpoints)
 # ---------------------------------------------------------------------------
 
@@ -184,11 +238,13 @@ def _job_to_response(job: Job) -> JobStatusResponse:
 @app.get(
     "/health",
     response_model=HealthResponse,
+    operation_id="getHealth",
     summary="Service health check",
     description=(
         "Returns service status, samba-core version, API/contract version, advertised "
         "capabilities, solver availability, and active job count."
     ),
+    responses={500: {"model": ErrorResponse}},
     tags=["meta"],
 )
 def health() -> HealthResponse:
@@ -216,7 +272,9 @@ def health() -> HealthResponse:
 @router.post(
     "/validate",
     response_model=ValidateResponse,
+    operation_id="validateScenario",
     summary="Validate a scenario",
+    responses=ERROR_RESPONSES,
     tags=["scenarios"],
 )
 def validate(request: ValidateRequest) -> ValidateResponse:
@@ -244,7 +302,9 @@ def validate(request: ValidateRequest) -> ValidateResponse:
     "/jobs",
     response_model=JobSubmitResponse,
     status_code=202,
+    operation_id="submitJob",
     summary="Submit an async optimisation job",
+    responses=ERROR_RESPONSES,
     tags=["jobs"],
 )
 def submit(request: JobSubmitRequest) -> JobSubmitResponse:
@@ -256,15 +316,13 @@ def submit(request: JobSubmitRequest) -> JobSubmitResponse:
     from samba.scenario.loader import ScenarioValidationError
     from samba.scenario.models import Scenario
 
-    # Validate scenario before queuing -- fail fast with 422
+    # Validate scenario before queuing -- fail fast with a 422 whose errors[]
+    # is byte-identical to what POST /api/v1/validate returns for the same input.
     try:
         Scenario.model_validate(request.scenario)
     except ValidationError as exc:
         err = ScenarioValidationError(exc)
-        raise HTTPException(
-            status_code=422,
-            detail=err.format_errors(),
-        ) from exc
+        raise ScenarioInvalidError(err.format_errors().splitlines()) from exc
 
     run_id = generate_run_id()
     submit_job(run_id, request.scenario, request.run_dir_name)
@@ -283,7 +341,9 @@ def submit(request: JobSubmitRequest) -> JobSubmitResponse:
 @router.get(
     "/jobs",
     response_model=list[JobStatusResponse],
+    operation_id="listJobs",
     summary="List all jobs",
+    responses=ERROR_RESPONSES,
     tags=["jobs"],
 )
 def list_jobs(
@@ -308,7 +368,9 @@ def list_jobs(
 @router.get(
     "/jobs/{run_id}",
     response_model=JobStatusResponse,
+    operation_id="getJob",
     summary="Poll job status",
+    responses=ERROR_RESPONSES,
     tags=["jobs"],
 )
 def get_job(run_id: str) -> JobStatusResponse:
@@ -335,7 +397,9 @@ _ARTIFACT_MEDIA_TYPES: dict[str, str] = {
 
 @router.get(
     "/jobs/{run_id}/artifacts/{filename}",
+    operation_id="getArtifact",
     summary="Download a result artifact",
+    responses=ERROR_RESPONSES,
     tags=["jobs"],
 )
 def get_artifact(run_id: str, filename: str) -> FileResponse:
@@ -390,7 +454,9 @@ def get_artifact(run_id: str, filename: str) -> FileResponse:
 @router.delete(
     "/jobs/{run_id}",
     status_code=204,
+    operation_id="deleteJob",
     summary="Delete a job record",
+    responses=ERROR_RESPONSES,
     tags=["jobs"],
 )
 def delete_job(

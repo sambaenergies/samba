@@ -13,6 +13,31 @@ from pydantic import BaseModel
 from samba_service.jobs import JobStatus
 
 # ---------------------------------------------------------------------------
+# Errors
+# ---------------------------------------------------------------------------
+
+
+class ErrorResponse(BaseModel):
+    """Shared envelope for every non-2xx response.
+
+    Attributes
+    ----------
+    detail:
+        Human-readable summary of the failure (the FastAPI default error key).
+    errors:
+        Optional per-item failure lines. For scenario-validation failures this
+        is ''ScenarioValidationError.format_errors().splitlines()'' -- the **same
+        list** ''POST /api/v1/validate'' returns in its 200 body for the same
+        input -- so a client can render field errors identically regardless of
+        which endpoint rejected the scenario. ''None'' for errors that have no
+        line-level breakdown (404 / 409 / 401 / generic 400).
+    """
+
+    detail: str
+    errors: list[str] | None = None
+
+
+# ---------------------------------------------------------------------------
 # Validate endpoint
 # ---------------------------------------------------------------------------
 

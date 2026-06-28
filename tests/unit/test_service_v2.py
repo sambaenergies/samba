@@ -230,6 +230,66 @@ class TestDocsV2:
 
 
 # ---------------------------------------------------------------------------
+# TestErrorContractV2 — typed error envelope + stable operation_ids
+# ---------------------------------------------------------------------------
+
+
+class TestErrorContractV2:
+    """The error surface is part of the typed, stable contract."""
+
+    _EXPECTED_OPERATION_IDS = {
+        ("/health", "get"): "getHealth",
+        ("/api/v1/validate", "post"): "validateScenario",
+        ("/api/v1/jobs", "post"): "submitJob",
+        ("/api/v1/jobs", "get"): "listJobs",
+        ("/api/v1/jobs/{run_id}", "get"): "getJob",
+        ("/api/v1/jobs/{run_id}/artifacts/{filename}", "get"): "getArtifact",
+        ("/api/v1/jobs/{run_id}", "delete"): "deleteJob",
+    }
+
+    def test_routes_have_explicit_operation_ids(self, client: TestClient) -> None:
+        paths = client.get("/openapi.json").json()["paths"]
+        for (path, method), op_id in self._EXPECTED_OPERATION_IDS.items():
+            assert paths[path][method]["operationId"] == op_id
+
+    def test_protected_routes_document_error_envelope(self, client: TestClient) -> None:
+        spec = client.get("/openapi.json").json()
+        responses = spec["paths"]["/api/v1/jobs"]["post"]["responses"]
+        for code in ("400", "401", "404", "409", "422", "500"):
+            assert code in responses, f"submitJob missing documented {code}"
+            ref = responses[code]["content"]["application/json"]["schema"]["$ref"]
+            assert ref.endswith("/ErrorResponse")
+
+    def test_validate_200_and_submit_422_share_error_lines(self, client: TestClient) -> None:
+        """The same malformed scenario yields a byte-identical errors[] list."""
+        bad = {k: v for k, v in _MINIMAL_VALID.items() if k != "load"}
+
+        validate_resp = client.post("/api/v1/validate", json={"scenario": bad})
+        assert validate_resp.status_code == 200
+        validate_errors = validate_resp.json()["errors"]
+
+        submit_resp = client.post("/api/v1/jobs", json={"scenario": bad})
+        assert submit_resp.status_code == 422
+        submit_body = submit_resp.json()
+        assert submit_body["errors"] == validate_errors  # byte-identical list
+        assert isinstance(submit_body["detail"], str)
+
+    def test_404_matches_error_envelope(self, client: TestClient) -> None:
+        body = client.get("/api/v1/jobs/does-not-exist").json()
+        assert isinstance(body["detail"], str)
+        assert body.get("errors") is None
+
+    def test_request_validation_422_uses_error_envelope(self, client: TestClient) -> None:
+        body = client.post("/api/v1/jobs", json={}).json()
+        assert isinstance(body["detail"], str)
+        assert isinstance(body["errors"], list) and len(body["errors"]) > 0
+
+    def test_401_matches_error_envelope(self, auth_client: TestClient) -> None:
+        body = auth_client.get("/api/v1/jobs").json()
+        assert isinstance(body["detail"], str)
+
+
+# ---------------------------------------------------------------------------
 # TestAuthDisabled — default: no SAMBA_API_KEY set
 # ---------------------------------------------------------------------------
 
