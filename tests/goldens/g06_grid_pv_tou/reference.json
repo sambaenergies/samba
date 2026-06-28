@@ -1,0 +1,61 @@
+{
+  "scenario": "g06_grid_pv_tou",
+  "description": "Pure-SAMBA LP baseline: grid-tied PV + battery, 9500 kWh/yr generic load (July peak), two-season TOU buy tariff, monthly sell rates, 2%/yr grid escalation, year=2023.",
+  "source": "samba_lp",
+  "notes": [
+    "Internally-consistent LP-optimal regression baseline for the SAMBA NPC formulation (full present-value cashflows: bought - sold + service over the project lifetime).",
+    "The LP installs the minimum PV needed to satisfy the renewable-fraction constraint; KPIs are re-baselined against SAMBA's own re-sourced weather/POA/load models."
+  ],
+  "kpis": {
+    "npc": 71912.1745,
+    "lcoe": 0.408552,
+    "pv_kw": 4.4041,
+    "battery_kwh": 0.0,
+    "inverter_kw": 3.3026,
+    "annual_pv_kwh": 7326.3496,
+    "renewable_fraction": 0.53922,
+    "annual_diesel_l": 0.0
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15% \u2014 tight LP regression gate"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "pv_kw": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "\u00b115% \u2014 LP continuous sizing"
+    },
+    "battery_kwh": {
+      "type": "absolute",
+      "value": 5.0,
+      "note": "\u00b15 kWh absolute \u2014 ref=0 so relative is undefined"
+    },
+    "inverter_kw": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "\u00b115%"
+    },
+    "annual_pv_kwh": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.05,
+      "note": "\u00b10.05 absolute"
+    },
+    "annual_diesel_l": {
+      "type": "absolute",
+      "value": 1.0,
+      "note": "\u00b11 L \u2014 ref=0"
+    }
+  }
+}

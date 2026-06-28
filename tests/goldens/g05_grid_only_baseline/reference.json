@@ -1,0 +1,59 @@
+{
+  "scenario": "g05_grid_only_baseline",
+  "description": "Grid-only baseline, flat buy rate $0.20/kWh, no renewables, San Francisco CA",
+  "source": "estimated",
+  "run_date": null,
+  "notes": "Grid-only scenario \u2014 no investment variables. NPC is the NPV of grid electricity costs over the project lifetime. LCOE approximates the flat buy rate of $0.20/kWh. Tolerances are loose to absorb minor differences in the NPC/LCOE accounting formulas.",
+  "kpis": {
+    "npc": 22811.8012,
+    "lcoe": 0.234247,
+    "pv_kw": 0.0,
+    "battery_kwh": 0.0,
+    "inverter_kw": 0.0,
+    "annual_pv_kwh": 0.0,
+    "renewable_fraction": 0.0,
+    "annual_diesel_l": 0.0
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.2,
+      "note": "\u00b120% \u2014 absorbs minor NPC accounting-formula differences"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.2,
+      "note": "\u00b120% \u2014 LCOE formula differences"
+    },
+    "pv_kw": {
+      "type": "absolute",
+      "value": 1.0,
+      "note": "\u00b11 kW absolute \u2014 should be 0 (no PV in grid-only)"
+    },
+    "battery_kwh": {
+      "type": "absolute",
+      "value": 1.0,
+      "note": "\u00b11 kWh absolute \u2014 should be 0 (no battery)"
+    },
+    "inverter_kw": {
+      "type": "absolute",
+      "value": 1.0,
+      "note": "\u00b11 kW absolute \u2014 no inverter in grid-only"
+    },
+    "annual_pv_kwh": {
+      "type": "absolute",
+      "value": 100.0,
+      "note": "\u00b1100 kWh absolute \u2014 should be 0"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.01,
+      "note": "\u00b11 pp absolute \u2014 should be 0 (no renewables)"
+    },
+    "annual_diesel_l": {
+      "type": "absolute",
+      "value": 10.0,
+      "note": "\u00b110 L absolute \u2014 no DG, ref=0"
+    }
+  }
+}

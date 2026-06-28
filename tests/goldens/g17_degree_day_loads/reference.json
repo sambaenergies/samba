@@ -1,0 +1,102 @@
+{
+  "scenario": "g17_degree_day_loads",
+  "description": "Degree-day thermal load model validation: heating and cooling demand computed from outdoor temperature with UA=0.5 kW/\u00b0C, setpoints 20\u00b0C/26\u00b0C, San Francisco weather.",
+  "source": "samba_lp",
+  "samba_version": "3.0.0",
+  "run_date": "2026-03-03",
+  "notes": "SF climate is heating-dominated: annual heating >> cooling (25747 vs 21 kWh_th). Degree-day model correctly computes seasonal demand. Invariant: annual_heating_demand >> annual_cooling_demand.",
+  "kpis": {
+    "npc": 21882.5433,
+    "lcoe": 0.326227,
+    "pv_kw": 0.0,
+    "battery_kwh": 0.0,
+    "inverter_kw": 0.0,
+    "annual_pv_kwh": 0.0,
+    "renewable_fraction": 0.0,
+    "annual_diesel_l": 0.0,
+    "annual_heat_produced_kwh": 26609.0,
+    "annual_cool_produced_kwh": 245.7895,
+    "mean_cop_heating": 4.5549,
+    "mean_cop_cooling": 5.4723,
+    "annual_heating_demand_kwh_th": 26609.0,
+    "annual_cooling_demand_kwh_th": 245.7895,
+    "annual_hp_elec_kwh": 6249.0771
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "pv_kw": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "zero \u2014 no PV"
+    },
+    "battery_kwh": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "zero \u2014 no battery"
+    },
+    "inverter_kw": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "zero \u2014 no DC bus"
+    },
+    "annual_pv_kwh": {
+      "type": "absolute",
+      "value": 1.0,
+      "note": "zero \u2014 no PV"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.001,
+      "note": "zero"
+    },
+    "annual_diesel_l": {
+      "type": "absolute",
+      "value": 1.0,
+      "note": "zero \u2014 no DG"
+    },
+    "annual_heat_produced_kwh": {
+      "type": "relative",
+      "value": 0.02,
+      "note": "\u00b12% \u2014 degree-day model deterministic given the same weather"
+    },
+    "annual_cool_produced_kwh": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15% \u2014 small cooling load sensitive to boundary hours"
+    },
+    "mean_cop_heating": {
+      "type": "relative",
+      "value": 0.02,
+      "note": "\u00b12% \u2014 catalog polynomial deterministic"
+    },
+    "mean_cop_cooling": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15% \u2014 small cooling load makes mean COP noisy"
+    },
+    "annual_heating_demand_kwh_th": {
+      "type": "relative",
+      "value": 0.02,
+      "note": "\u00b12%"
+    },
+    "annual_cooling_demand_kwh_th": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15% \u2014 small value"
+    },
+    "annual_hp_elec_kwh": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    }
+  }
+}

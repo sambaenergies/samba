@@ -1,0 +1,89 @@
+# SAMBA Golden Scenario g13 — Heat Pump Heating-Only
+#
+# PURPOSE: Baseline COP heating validation — verify the HP satisfies a
+#          constant 5 kW_th heating demand with zero unmet load (thermal LPSP=0).
+#
+# Topology: Grid (20 kW) + HP (heating_only, catalog_auto) + Inverter
+# Year:     2023
+#
+# Thermal load: constant 5 kW_th × 8760 h = 43 800 kWh_th/yr
+# Electricity: flat $0.15/kWh
+#
+# Key invariants:
+#   - annual_heat_produced_kwh ≈ 43 800 kWh_th (5 kW × 8760 h)
+#   - thermal_lpsp_heating = 0.0
+#   - mean_cop_heating > 1.5 (catalog COP in SF climate)
+
+schema_version: "2.0"
+
+project:
+  name: "g13 — HP Heating-Only (5 kW constant load, flat $0.15)"
+  year: 2023
+  lifetime_years: 15
+  discount_rate_nominal: 0.06
+  inflation_rate: 0.02
+  re_incentive_rate: 0.0
+  grid_escalation_rate: 0.0
+  budget: null
+  currency: "USD"
+  capex_year: 0
+
+location:
+  latitude: 37.77
+  longitude: -122.42
+  altitude_m: 0.0
+  timezone: "America/Los_Angeles"
+
+weather:
+  source: "csv"
+  csv_path: "../../../examples/content/weather_sf_2019.csv"
+
+load:
+  source: "generic_annual_total"
+  annual_kwh: 6000.0            # background electrical load ~500 kWh/month
+  peak_month: "January"
+  thermal:
+    enabled: true
+    source: "csv"
+    heating_csv_path: "heating_5kw.csv"   # 8760 rows, constant 5.0 kW_th
+
+components:
+
+  inverter:
+    capacity_kw: null
+    capex_per_kw: 314.0
+    opex_per_kw_yr: 0.0
+    lifetime_years: 25
+    efficiency: 0.96
+
+  grid:
+    enabled: true
+    capacity_kw: 20.0
+    export_allowed: false
+    capex: 0.0
+    opex_yr: 0.0
+
+  heat_pump:
+    enabled: true
+    mode: "heating_only"
+    sizing: "catalog_auto"
+    cop_source: "catalog"
+    capex: 4000.0
+    opex_per_year: 150.0
+    lifetime_years: 15
+
+tariff:
+  buy:
+    type: "flat"
+    rate_per_kwh: 0.15
+
+  service_charge:
+    type: "flat"
+    monthly_flat: 10.0
+
+constraints:
+  max_lpsp: 0.001
+  thermal_lpsp_max: 0.0
+
+objective:
+  type: "cost"

@@ -1,0 +1,34 @@
+PV ep_costs  = 127.8058 $/kW/yr (real rate 2.4510%)
+Inv ep_costs = 16.9472 $/kW/yr
+PV yield     = 1748.4 kWh/kWp/yr
+
+=== Investment mode solve ===
+  pv_kw=3.171  inv_kw=2.409  grid_net=1852.18  RF=0.5293
+  LP_obj_value = 2298.30 $/yr  (capital + grid)
+
+=== Fixed PV sweep (inv = peak PV output) ===
+   pv_kw   inv_kw      pv_dc   grid_buy  grid_sell     dump   grid_net   full_cost     RF
+------------------------------------------------------------------------------------------
+  pv=0.50: ERROR Solver 'appsi_highs' not found. Install HiGHS with: pip install highspy  (recommended), or use: solver_name='cbc' (pip install coincbc).
+  pv=1.00: ERROR Solver 'appsi_highs' not found. Install HiGHS with: pip install highspy  (recommended), or use: solver_name='cbc' (pip install coincbc).
+  pv=2.00: ERROR Solver 'appsi_highs' not found. Install HiGHS with: pip install highspy  (recommended), or use: solver_name='cbc' (pip install coincbc).
+    3.00    2.568     5245.2     4966.3     2439.1      0.0    1875.11     2302.04 0.5137
+    3.17    2.713     5542.5     4931.2     2689.4      0.0    1850.42     2301.54 0.5292
+    4.00    3.424     6993.6     4792.5     3943.8      0.0    1741.42     2310.66 0.5934
+    5.00    4.279     8742.1     4662.2     5491.9      0.0    1622.62     2334.18 0.6522
+    6.00    5.135    10490.5     4563.1     7071.3      0.0    1515.33     2369.20 0.6969
+    7.00    5.991    12238.9     4487.0     8673.8      0.0    1417.52     2413.69 0.7317
+    8.00    6.847    13987.3     4427.6    10292.8      0.0    1325.49     2463.98 0.7596
+    9.00    7.703    15735.7     4379.7    11923.3      0.0    1237.46     2518.26 0.7823
+   10.00    8.559    17484.1     4340.2    13562.3      0.0    1152.39     2575.50 0.8011
+   11.00    9.415    19232.5     4306.8    15207.4      0.0    1069.45     2634.87 0.8170
+   11.56    9.894    20211.6     4289.9    16130.4      0.0    1023.61     2668.72 0.8249
+   12.00   10.271    20980.9     4277.3    16856.4      0.0     987.85     2695.58 0.8307
+   14.00   11.983    24477.8     4226.8    20162.8      0.0     827.56     2819.91 0.8527
+   16.00   13.694    27974.6     4185.4    23478.4      0.0     670.49     2947.47 0.8699
+   20.00   17.118    34968.2     4118.4    30125.2      0.0     362.08     3208.29 0.8946
+
+*** Minimum full_cost at pv_kw = 3.17 kW: 2301.54 $/yr ***
+    (Investment mode found:  pv_kw = 3.171 kW, full_cost Γëê 2298.30 $/yr)
+
+OK: Investment LP matches sweep optimum.

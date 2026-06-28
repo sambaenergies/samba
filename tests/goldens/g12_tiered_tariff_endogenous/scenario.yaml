@@ -1,0 +1,110 @@
+# SAMBA Golden Scenario g12 — Endogenous Piecewise-Linear Tiered Tariff
+#
+# PURPOSE: Verify that endogenous tiering correctly prices monthly grid
+#          imports at the right tier boundary (Phase 17 feature).
+#
+# Topology: Grid (20 kW) + PV (2 kW fixed) + Battery (20 kWh fixed)
+#           + Inverter (investment), grid-tied.
+# Location: San Francisco, CA
+# Year:     2023
+#
+# Tariff: 3-tier monthly tiered rate
+#   Tier 1:   0–500 kWh/month   @ $0.10/kWh
+#   Tier 2: 500–1000 kWh/month  @ $0.17/kWh
+#   Tier 3:   >1000 kWh/month   @ $0.24/kWh
+#
+# Load: ~13200 kWh/yr → ~1100 kWh/month average (hits Tier 3 most months)
+# 2 kW PV: ~3200 kWh/yr generation → net import ~10000 kWh/yr → ~833 kWh/month
+#   Summer months land in Tier 2; winter months may reach Tier 3.
+# 20 kWh battery: shifts PV generation to maximise savings.
+#
+# Key field: tariff.buy.endogenous_tiering: true
+#
+# Sanity checks encoded in test_v2_goldens.py:
+#   - monthly_grid_kwh has 12 values, each >= 0
+#   - sum(monthly_grid_kwh) ≈ total_grid_bought (within 1% rounding)
+#   - annual_electricity_cost (endogenous) ≤ annual_electricity_cost (pre-compute)
+
+schema_version: "1.1"
+
+project:
+  name: "g12 — Endogenous Tiered Tariff (Grid PV+Batt, 3-tier monthly)"
+  year: 2023
+  lifetime_years: 20
+  discount_rate_nominal: 0.06
+  inflation_rate: 0.02
+  re_incentive_rate: 0.0
+  grid_escalation_rate: 0.0
+  budget: null
+  currency: "USD"
+  capex_year: 0
+
+location:
+  latitude: 37.77
+  longitude: -122.42
+  altitude_m: 0.0
+  timezone: "America/Los_Angeles"
+
+weather:
+  source: "csv"
+  csv_path: "../../../examples/content/weather_sf_2019.csv"
+
+load:
+  source: "generic_annual_total"
+  annual_kwh: 13200.0             # ~1100 kWh/month → hits Tier 3 before storage
+  peak_month: "July"
+
+components:
+
+  pv:
+    enabled: true
+    capacity_kw: 2.0              # fixed 2 kW — ~3200 kWh/yr → net ~833 kWh/month avg
+    capex_per_kw: 2368.0
+    opex_per_kw_yr: 30.36
+    lifetime_years: 25
+    derating_factor: 0.90
+    tilt_deg: 33.0
+    azimuth_deg: 180.0
+    module_type: "monofacial"
+    noct_celsius: 45.0
+    temp_coeff_pmax: -0.003
+
+  battery:
+    enabled: true
+    capacity_kwh: 20.0            # fixed 20 kWh — shifts PV to maximise tier savings
+    chemistry: "li_ion"
+    capex_per_kwh: 1450.0
+    opex_per_kwh_yr: 10.0
+    lifetime_years: 10
+    soc_min: 0.10
+    soc_max: 1.00
+    soc_initial: 0.50
+    charge_efficiency: 0.9487
+    discharge_efficiency: 0.9487
+    c_rate_charge: 1.0
+    c_rate_discharge: 1.0
+
+  inverter:
+    capacity_kw: null             # design variable to cover PV + battery discharge
+    capex_per_kw: 300.0
+    opex_per_kw_yr: 5.0
+    lifetime_years: 10
+    efficiency: 0.96
+
+  grid:
+    capacity_kw: 20.0
+
+tariff:
+  buy:
+    type: "tiered"
+    tiers:
+      - limit_kwh: 500
+        rate_per_kwh: 0.10
+      - limit_kwh: 1000
+        rate_per_kwh: 0.17
+      - limit_kwh: null           # unbounded top tier
+        rate_per_kwh: 0.24
+    endogenous_tiering: true      # Phase 17: LP-endogenous PWL cost model
+
+constraints:
+  min_renewable_fraction: 0.0     # no RE constraint — cost driven only

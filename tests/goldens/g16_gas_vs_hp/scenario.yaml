@@ -1,0 +1,107 @@
+# SAMBA Golden Scenario g16 — Gas Boiler vs Heat Pump Economic Dispatch
+#
+# PURPOSE: Verify the LP merit-order dispatch between an HP and a gas boiler.
+#          At $0.15/kWh_e and catalog HP COP, the LP selects the least-cost
+#          source hour-by-hour.
+#
+# Topology: Grid (20 kW) + HP (heating_only, catalog_auto) + Gas Supply + Inverter
+# Year:     2023
+#
+# Tariff:   Electricity flat $0.15/kWh, Gas flat $0.04/kWh_th
+# LP merit:
+#   Gas heat cost = $0.04 / η_boiler(0.92) ≈ $0.0435/kWh_th
+#   HP  heat cost = $0.25 / COP_h (varies; ~2-5 in SF)
+#   → LP prefers gas when COP < $0.25/$0.0435 ≈ 5.75 (most SF hours)
+#   → LP prefers HP when COP > 5.75 (hot summer hours, rarely)
+#
+# Thermal load: constant 5 kW_th CSV
+#
+# Key invariants (regression-lock):
+#   - thermal_lpsp_heating = 0.0
+#   - annual_heat_produced_kwh + annual_gas_consumption_kwh_th (output) ≈ 43 800 kWh_th
+#   - Both sources are used (partial contribution from each)
+
+schema_version: "2.0"
+
+project:
+  name: "g16 — Gas Boiler vs Heat Pump merit-order LP dispatch"
+  year: 2023
+  lifetime_years: 15
+  discount_rate_nominal: 0.06
+  inflation_rate: 0.02
+  re_incentive_rate: 0.0
+  grid_escalation_rate: 0.0
+  budget: null
+  currency: "USD"
+  capex_year: 0
+
+location:
+  latitude: 37.77
+  longitude: -122.42
+  altitude_m: 0.0
+  timezone: "America/Los_Angeles"
+
+weather:
+  source: "csv"
+  csv_path: "../../../examples/content/weather_sf_2019.csv"
+
+load:
+  source: "generic_annual_total"
+  annual_kwh: 6000.0
+  peak_month: "January"
+  thermal:
+    enabled: true
+    source: "csv"
+    heating_csv_path: "heating_5kw.csv"   # 8760 rows, constant 5.0 kW_th
+
+components:
+
+  inverter:
+    capacity_kw: null
+    capex_per_kw: 314.0
+    opex_per_kw_yr: 0.0
+    lifetime_years: 25
+    efficiency: 0.96
+
+  grid:
+    enabled: true
+    capacity_kw: 20.0
+    export_allowed: false
+    capex: 0.0
+    opex_yr: 0.0
+
+  heat_pump:
+    enabled: true
+    mode: "heating_only"
+    sizing: "catalog_auto"
+    cop_source: "catalog"
+    capex: 4000.0
+    opex_per_year: 150.0
+    lifetime_years: 15
+
+  gas_supply:
+    enabled: true
+    boiler_efficiency: 0.92
+    tariff:
+      rate_type: "flat"
+      unit: "per_kwh_th"
+      flat_rate: 0.04       # $0.04/kWh_th gas → delivered cost ≈ $0.043/kWh_th
+    capex: 2000.0
+    opex_per_year: 100.0
+    lifetime_years: 20
+
+tariff:
+  buy:
+    type: "flat"
+    rate_per_kwh: 0.25   # expensive electricity → gas dominates (COP < 5.75 for most SF hours)
+
+  service_charge:
+    type: "flat"
+    monthly_flat: 10.0
+
+constraints:
+  max_lpsp: 0.001
+  thermal_lpsp_max: 0.0
+
+objective:
+  type: "cost"

@@ -1,0 +1,101 @@
+{
+  "scenario": "g20_demand_charge",
+  "source": "samba_lp",
+  "samba_version": "4.0.0",
+  "description": "v4 golden: g20_demand_charge",
+  "kpis": {
+    "npc": 155573.4986,
+    "lcoe": 0.159753,
+    "pv_kw": 74.2981,
+    "battery_kwh": 88.5505,
+    "inverter_kw": 38.2964,
+    "annual_pv_kwh": 121061.0256,
+    "renewable_fraction": 0.929408,
+    "annual_diesel_l": 0.0,
+    "total_grid_bought": 8827.2581,
+    "total_grid_cost_net": -23991.0746,
+    "lpsp": 0.0,
+    "annual_demand_charge_usd": 360.5472,
+    "annual_energy_net_usd": -1655.395,
+    "annual_throughput_cycles": 260.45,
+    "battery_eol_year": 10.0
+  },
+  "series_kpis": {
+    "peak_demand_kw_by_month": [
+      8.6796,
+      5.0873,
+      4.1255,
+      3.0553,
+      1.2601,
+      0.0431,
+      0.0322,
+      0.8395,
+      1.8598,
+      3.3919,
+      6.6288,
+      8.9812
+    ]
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.02
+    },
+    "lcoe": {
+      "type": "absolute",
+      "value": 0.5
+    },
+    "pv_kw": {
+      "type": "relative",
+      "value": 0.02
+    },
+    "battery_kwh": {
+      "type": "relative",
+      "value": 0.02
+    },
+    "inverter_kw": {
+      "type": "relative",
+      "value": 0.02
+    },
+    "annual_pv_kwh": {
+      "type": "relative",
+      "value": 0.02
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.5
+    },
+    "annual_diesel_l": {
+      "type": "absolute",
+      "value": 0.5
+    },
+    "total_grid_bought": {
+      "type": "relative",
+      "value": 0.02
+    },
+    "total_grid_cost_net": {
+      "type": "relative",
+      "value": 0.02
+    },
+    "lpsp": {
+      "type": "absolute",
+      "value": 0.5
+    },
+    "annual_demand_charge_usd": {
+      "type": "relative",
+      "value": 0.02
+    },
+    "annual_energy_net_usd": {
+      "type": "relative",
+      "value": 0.02
+    },
+    "annual_throughput_cycles": {
+      "type": "relative",
+      "value": 0.02
+    },
+    "battery_eol_year": {
+      "type": "absolute",
+      "value": 0.5
+    }
+  }
+}

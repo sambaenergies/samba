@@ -1,0 +1,4 @@
+# Internal planning / historical scratch notes — local only, not published.
+planning/
+# Local-only vendored reference tree (git-ignored).
+_reference/

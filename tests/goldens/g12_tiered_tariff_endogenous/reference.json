@@ -1,0 +1,88 @@
+{
+  "scenario": "g12_tiered_tariff_endogenous",
+  "description": "Grid + PV 2 kW (fixed) + Battery 20 kWh (fixed): endogenous 3-tier tariff with battery arbitrage (Phase 17).",
+  "source": "samba_lp",
+  "samba_version": "2.0.0",
+  "run_date": "2026-03-03",
+  "notes": "Endogenous tiered tariff: tiers 0-500@\u00a30.10, 500-1000@\u00a30.17, >1000@\u00a30.24/kWh/month. Battery reduces monthly consumption to stay in lower tiers. PV and battery are fixed-size design variables so only inverter is optimised. monthly_grid_kwh peaks in July (1618 kWh) due to higher generic load in summer.",
+  "kpis": {
+    "npc": 77576.7054,
+    "lcoe": 0.429444,
+    "pv_kw": 2.0,
+    "battery_kwh": 20.0,
+    "inverter_kw": 0.7977,
+    "annual_pv_kwh": 3327.0964,
+    "renewable_fraction": 0.240382,
+    "annual_diesel_l": 0.0,
+    "total_grid_bought": 10093.2124,
+    "total_grid_cost_net": 20515.0388
+  },
+  "series_kpis": {
+    "monthly_grid_kwh": [
+      753.1,
+      539.87,
+      511.78,
+      489.33,
+      630.53,
+      1046.93,
+      1618.4,
+      1392.87,
+      932.33,
+      729.71,
+      563.06,
+      729.58
+    ]
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "pv_kw": {
+      "type": "absolute",
+      "value": 0.5,
+      "note": "\u00b10.5 kW \u2014 fixed at 2.0"
+    },
+    "battery_kwh": {
+      "type": "absolute",
+      "value": 2.0,
+      "note": "\u00b12 kWh \u2014 fixed at 20.0"
+    },
+    "inverter_kw": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "\u00b115% \u2014 only free design variable"
+    },
+    "annual_pv_kwh": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.05,
+      "note": "\u00b10.05 absolute"
+    },
+    "annual_diesel_l": {
+      "type": "absolute",
+      "value": 10.0,
+      "note": "\u00b110 L \u2014 expected 0"
+    },
+    "total_grid_bought": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    },
+    "total_grid_cost_net": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110%"
+    }
+  }
+}

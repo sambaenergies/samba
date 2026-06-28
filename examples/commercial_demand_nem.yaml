@@ -1,0 +1,68 @@
+# ---------------------------------------------------------------------------
+# SAMBA v4 example — Commercial grid + PV + battery with a demand charge and
+# NEM net-billing. Demonstrates the v4 tariff features:
+#   - tariff.demand_charge  ($/kW-month on the monthly peak import; LP shaves it)
+#   - tariff.nem            (monthly $0-floored bills with export-credit carryover)
+# Runs out of the box on the bundled San Francisco data:
+#   samba run examples/commercial_demand_nem.yaml -o results/
+# ---------------------------------------------------------------------------
+schema_version: "4.0"
+
+project:
+  name: "Commercial — PV + Battery + Demand Charge + NEM"
+  year: 2025
+  lifetime_years: 25
+  discount_rate_nominal: 0.08
+  inflation_rate: 0.025
+  currency: "USD"
+
+location:
+  latitude: 37.77
+  longitude: -122.42
+  altitude_m: 32.0
+  timezone: "America/Los_Angeles"
+
+weather:
+  source: "csv"
+  csv_path: "content/weather_sf_2019.csv"
+
+load:
+  source: "hourly_csv"
+  csv_path: "content/load_residential_8760.csv"
+  scale_factor: 8.0          # scale the bundled profile up to a commercial size
+
+components:
+  pv:
+    enabled: true
+    capacity_kw: null        # solver sizes the array
+    capex_per_kw: 1100.0
+  battery:
+    enabled: true
+    capacity_kwh: null       # solver sizes storage (useful for peak shaving)
+    capex_per_kwh: 350.0
+    # Optional v4 degradation model: lifetime follows cycling throughput.
+    degradation:
+      calendar_fade_pct_yr: 1.5
+      cycle_fade_pct_per_efc: 0.005
+      end_of_life_capacity_pct: 80.0
+  inverter:
+    capacity_kw: null
+    capex_per_kw: 300.0
+  grid:
+    capacity_kw: 200.0
+    export_allowed: true
+    export_capacity_kw: 100.0
+
+tariff:
+  buy: { type: "flat", rate_per_kwh: 0.22 }
+  sell: { type: "flat", rate_per_kwh: 0.06 }
+  # Demand charge on the monthly peak grid import — the solver has an incentive
+  # to shave peaks (e.g. by discharging the battery) rather than just be billed.
+  demand_charge:
+    rate_per_kw_month: 18.0
+  # Net-billing: each month's bill is floored at $0; surplus export credit rolls
+  # forward; leftover year-end credit is forfeited (fraction 0).
+  nem:
+    mode: "net_billing"
+    carryover: true
+    annual_excess_credit_fraction: 0.0

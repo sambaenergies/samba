@@ -1,0 +1,182 @@
+# SAMBA — PV + Battery + EV / V2G Example
+# schema_version: "1.0"
+#
+# This example shows a grid-connected home with:
+#   • 8 kWp rooftop PV (fixed size)
+#   • 10 kWh battery (fixed size)
+#   • 40 kWh EV (charge-only variant; see V2G section below)
+#
+# The EV uses a standard 5-day commute schedule: away 08:00–18:00 Mon–Fri.
+# Smart charging is presence-gated so the LP only schedules charging while
+# the car is plugged in at home.
+#
+# Units and conventions
+#   powers  → kW    energies → kWh    costs → $/unit
+#   SOC fractions are decimals in [0, 1]
+
+schema_version: "1.0"
+
+# ---------------------------------------------------------------------------
+# Project
+# ---------------------------------------------------------------------------
+project:
+  name: "PV + Battery + EV (with optional V2G)"
+  year: 2025
+  lifetime_years: 20
+  discount_rate_nominal: 0.07
+  inflation_rate: 0.025
+  re_incentive_rate: 0.30           # 30 % ITC applied to solar + battery capex
+  currency: "USD"
+
+# ---------------------------------------------------------------------------
+# Location
+# ---------------------------------------------------------------------------
+location:
+  latitude: 37.77
+  longitude: -122.42
+  altitude_m: 15.0
+  timezone: "America/Los_Angeles"   # IANA timezone
+
+# ---------------------------------------------------------------------------
+# Weather
+# ---------------------------------------------------------------------------
+weather:
+  source: "csv"
+  csv_path: "content/weather_sf_2019.csv"
+
+# ---------------------------------------------------------------------------
+# Load
+# ---------------------------------------------------------------------------
+load:
+  source: "generic_annual_total"
+  annual_kwh: 8500.0                # typical US household
+
+# ---------------------------------------------------------------------------
+# Tariff  (flat-rate + net-metering sell)
+# ---------------------------------------------------------------------------
+tariff:
+  buy:
+    type: "flat"
+    rate_per_kwh: 0.27              # SF PG&E residential average
+  sell:
+    type: "flat"
+    rate_per_kwh: 0.08              # net-metering export credit
+
+# ---------------------------------------------------------------------------
+# Components
+# ---------------------------------------------------------------------------
+components:
+
+  # Grid connection (net-metering allowed)
+  grid:
+    capacity_kw: 10.0               # service entrance limit
+    export_allowed: true            # allows net-metering export
+
+  # DC-coupled inverter
+  inverter:
+    capacity_kw: 8.0                # size to match PV
+    capex_per_kw: 200.0
+    opex_per_kw_yr: 20.0
+    lifetime_years: 15
+    efficiency: 0.97
+
+  # Rooftop PV (fixed 8 kWp)
+  pv:
+    capacity_kw: 8.0                # null → solver optimises; float → fixed
+    capex_per_kw: 1100.0
+    opex_per_kw_yr: 10.0
+    lifetime_years: 25
+
+  # DC-coupled battery
+  battery:
+    capacity_kwh: 10.0              # null → solver optimises; float → fixed
+    power_kw: 5.0                   # max charge/discharge power
+    soc_min: 0.10
+    soc_max: 0.95
+    soc_initial: 0.50
+    charge_efficiency: 0.96
+    discharge_efficiency: 0.96
+    capex_per_kwh: 400.0
+    opex_per_kwh_yr: 20.0
+    lifetime_years: 10
+
+  # -------------------------------------------------------------------------
+  # EV — smart charging (V2G disabled)
+  # -------------------------------------------------------------------------
+  # Remove the `ev:` block entirely if there is no EV in the scenario.
+  # To enable V2G, change `v2g_enabled: true` and set `max_discharge_kw`.
+  # -------------------------------------------------------------------------
+  ev:
+    enabled: true
+
+    # Physical parameters
+    capacity_kwh: 40.0              # usable battery capacity
+    max_charge_kw: 7.2              # Level 2 EVSE (240 V / 30 A)
+    max_discharge_kw: 0.0           # 0 = no V2G (see V2G variant below)
+
+    # State-of-charge bounds (fraction of capacity)
+    soc_min: 0.10                   # never deplete below 10 %
+    soc_max: 1.00                   # allow full charge at home
+    soc_initial: 0.50               # initial SOC at hour 0
+
+    # Travel SOC: how full the car leaves / how depleted it returns
+    soc_departure: 0.80             # must leave with ≥ 80 % SOC
+    soc_arrival: 0.30               # returns with ~30 % (after commute)
+
+    # Charging efficiency round-trip
+    charge_efficiency: 0.92
+    discharge_efficiency: 0.92      # used only when V2G is enabled
+    self_discharge_rate: 0.000      # EV traction battery: negligible
+
+    # V2G — set to true to allow bidirectional discharge to the grid
+    v2g_enabled: false
+
+    # Presence / availability schedule
+    # Options: "schedule" (built-in M-F commute) or "csv" (custom 8760 array)
+    presence_source: "schedule"
+    arrival_hour: 18                # returns home at 18:00
+    departure_hour: 8               # leaves at 08:00
+    workdays_per_week: 5            # Mon–Fri commuting days
+
+    # Uncomment to load a custom presence CSV (8760 rows, 0/1 values):
+    # presence_source: "csv"
+    # presence_csv_path: "data/ev/my_ev_presence.csv"
+
+    # Economics (lifecycle cost tracking — not an optimisation objective)
+    capex: 0.0                      # sunk cost; set to vehicle price for NPC tracking
+    opex_per_year: 0.0
+    lifetime_years: 10
+    replacement_cost: 8000.0        # battery replacement after lifetime_kwh
+    lifetime_kwh: 150000.0          # manufacturer cycle-life rating
+
+# ---------------------------------------------------------------------------
+# V2G Variant
+# ---------------------------------------------------------------------------
+# To enable Vehicle-to-Grid bidirectional operation, replace the `ev:` block
+# above with the following (adjust max_discharge_kw and sell tariff):
+#
+#   ev:
+#     enabled: true
+#     capacity_kwh: 40.0
+#     max_charge_kw: 7.2
+#     max_discharge_kw: 7.2       # must be > 0 when v2g_enabled = true
+#     soc_min: 0.10
+#     soc_max: 1.00
+#     soc_initial: 0.50
+#     soc_departure: 0.80
+#     soc_arrival: 0.30
+#     charge_efficiency: 0.92
+#     discharge_efficiency: 0.92
+#     v2g_enabled: true           # enables bidirectional discharge to grid
+#     presence_source: "schedule"
+#     arrival_hour: 18
+#     departure_hour: 8
+#     workdays_per_week: 5
+#     capex: 0.0
+#     lifetime_years: 10
+#     replacement_cost: 8000.0
+#     lifetime_kwh: 150000.0
+#
+# V2G revenue is reported in the KPI output as ``ev_v2g_revenue``.
+# The LP will schedule V2G discharge whenever the sell tariff is high
+# enough to offset the round-trip efficiency loss.

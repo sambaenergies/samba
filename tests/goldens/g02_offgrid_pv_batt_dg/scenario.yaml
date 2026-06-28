@@ -1,0 +1,104 @@
+# SAMBA Golden Scenario g02 — Off-grid PV + Battery + Diesel Generator
+#
+# Topology: PV (investment) + Battery (investment) + Diesel Generator (10 kW fixed)
+#           + Inverter (investment); NO grid connection
+# Location: San Francisco, CA, USA (same NSRDB weather as g01)
+# Tariff:   None (off-grid); grid buy rate set to $0
+# Year:     2013
+#
+# Reference: Physics-based estimate (source="estimated" in reference.json).
+
+schema_version: "1.0"
+
+project:
+  name: "g02 — Off-grid PV + Battery + DG"
+  year: 2013
+  lifetime_years: 25
+  discount_rate_nominal: 0.045
+  inflation_rate: 0.02
+  re_incentive_rate: 0.0
+  budget: null
+  currency: "USD"
+  capex_year: 0
+
+location:
+  latitude: 37.77
+  longitude: -122.42
+  altitude_m: 0.0
+  timezone: "America/Los_Angeles"
+
+weather:
+  source: "csv"
+  csv_path: "../../../examples/content/weather_sf_2019.csv"
+
+load:
+  source: "hourly_csv"
+  csv_path: "../../../examples/content/load_residential_8760.csv"
+
+components:
+
+  pv:
+    enabled: true
+    capacity_kw: null
+    capex_per_kw: 2368.0           # C_PV + Engineering_Costs (same as g01)
+    opex_per_kw_yr: 30.36
+    lifetime_years: 25
+    derating_factor: 0.90
+    tilt_deg: 33.0
+    azimuth_deg: 180.0
+    module_type: "monofacial"
+    noct_celsius: 45.0
+    temp_coeff_pmax: -0.003
+
+  battery:
+    enabled: true
+    capacity_kwh: null
+    chemistry: "li_ion"
+    capex_per_kwh: 1450.0
+    opex_per_kwh_yr: 10.0
+    lifetime_years: 10
+    soc_min: 0.10
+    soc_max: 1.00
+    soc_initial: 0.50
+    charge_efficiency: 0.9487
+    discharge_efficiency: 0.9487
+    c_rate_charge: 1.0
+    c_rate_discharge: 1.0
+
+  diesel_generator:
+    enabled: true
+    capacity_kw: 10.0
+    capex_per_kw: 818.0
+    opex_per_kw_yr: 14.0
+    lifetime_years: 15
+    fuel_price_per_l: 1.281
+    fuel_lhv_kwh_per_l: 9.9        # standard diesel LHV
+    slope_l_per_kwh: 0.4388
+    intercept_l_per_kw_hr: 0.1097
+    min_load_fraction: 0.0        # LP relaxation — set >0 only for MILP (g08)
+
+  inverter:
+    capacity_kw: null
+    capex_per_kw: 314.0
+    opex_per_kw_yr: 0.0
+    lifetime_years: 25
+    efficiency: 0.96
+
+  # No grid — fully off-grid system
+
+tariff:
+  buy:
+    # Off-grid: no grid import possible; rate set to 0 for model completeness
+    type: "flat"
+    rate_per_kwh: 0.0
+
+constraints:
+  # Off-grid system must serve all load (LPSP → 0)
+  max_lpsp: 0.001
+  min_renewable_fraction: 0.0     # DG provides backup; RE may be <50%
+  max_annual_diesel_l: null
+  max_battery_cycles_yr: null
+  force_grid_disconnect: false
+
+objective:
+  type: "cost"

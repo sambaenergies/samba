@@ -1,0 +1,60 @@
+{
+  "scenario": "g03_grid_pv_batt_tou",
+  "description": "Grid-tied PV + Battery (design variable), Tiered buy rate, San Francisco CA",
+  "source": "samba_lp",
+  "samba_version": "post-bugfix-ABC",
+  "run_date": "2026-03-03",
+  "notes": "Pure-SAMBA LP baseline. The LP installs the minimum PV to satisfy the min_renewable_fraction=0.50 constraint and no battery (too expensive vs the cheap tiered grid rate). The KPI renewable_fraction is below 0.50 because its denominator is total generation incl. grid imports, while the constraint enforces pv_ac/load >= 0.50.",
+  "kpis": {
+    "npc": 15001.1924,
+    "lcoe": 0.154042,
+    "pv_kw": 1.6456,
+    "battery_kwh": 0.0,
+    "inverter_kw": 1.2401,
+    "annual_pv_kwh": 2737.5,
+    "renewable_fraction": 0.41794,
+    "annual_diesel_l": 0.0
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "+-10% - LP regression gate"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "+-10%"
+    },
+    "pv_kw": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "+-15%"
+    },
+    "battery_kwh": {
+      "type": "absolute",
+      "value": 5.0,
+      "note": "+-5 kWh absolute - ref=0"
+    },
+    "inverter_kw": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "+-15%"
+    },
+    "annual_pv_kwh": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "+-10%"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.05,
+      "note": "+-0.05 absolute"
+    },
+    "annual_diesel_l": {
+      "type": "absolute",
+      "value": 50.0,
+      "note": "+-50 L absolute - no DG"
+    }
+  }
+}

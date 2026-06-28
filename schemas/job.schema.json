@@ -1,0 +1,124 @@
+{
+  "$defs": {
+    "JobStatus": {
+      "description": "Life-cycle state of a background solve job.",
+      "enum": [
+        "pending",
+        "running",
+        "completed",
+        "failed"
+      ],
+      "title": "JobStatus",
+      "type": "string"
+    }
+  },
+  "description": "Response body for ''GET /api/v1/jobs/{run_id}''.\n\nAttributes\n----------\nrun_id:\n    UUID4 job identifier.\nstatus:\n    Current :class:'~samba_service.jobs.JobStatus'.\nsubmitted_at:\n    UTC timestamp of job submission.\nstarted_at:\n    UTC timestamp when the solver thread picked up the job, or ''None''.\ncompleted_at:\n    UTC timestamp of job completion (success or failure), or ''None''.\nkpis:\n    KPI dict (28 fields).  Present only when ''status == \"completed\"''.\nsizing:\n    List of sizing records.  Present only when ''status == \"completed\"''.\nartifacts:\n    List of downloadable filenames available under\n    ''GET /api/v1/jobs/{run_id}/artifacts/{filename}''.\n    Populated only when ''status == \"completed\"''.\nerror:\n    Human-readable error description when ''status == \"failed\"''.",
+  "properties": {
+    "artifacts": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Artifacts",
+      "type": "array"
+    },
+    "completed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Completed At"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error"
+    },
+    "kpis": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Kpis"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "sizing": {
+      "anyOf": [
+        {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sizing"
+    },
+    "solve_time_s": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Solve Time S"
+    },
+    "started_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Started At"
+    },
+    "status": {
+      "$ref": "#/$defs/JobStatus"
+    },
+    "submitted_at": {
+      "format": "date-time",
+      "title": "Submitted At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "run_id",
+    "status",
+    "submitted_at"
+  ],
+  "title": "JobStatusResponse",
+  "type": "object"
+}

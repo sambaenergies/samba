@@ -1,0 +1,96 @@
+{
+  "scenario": "g15_hp_thermal_storage_tou",
+  "description": "Grid + HP + Thermal Storage (TOU $0.08 off-peak / $0.25 on-peak): constant 5 kW_th heating. LP invests in thermal storage and time-shifts HP to off-peak hours.",
+  "source": "samba_lp",
+  "samba_version": "3.0.0",
+  "run_date": "2026-03-03",
+  "notes": "TOU pricing incentivises thermal storage investment. thermal_storage_capex=36.42 means LP selected a ~36 kWh_th tank. Cycles ~663/yr shows active use.",
+  "kpis": {
+    "npc": 34065.6049,
+    "lcoe": 0.507853,
+    "pv_kw": 0.0,
+    "battery_kwh": 0.0,
+    "inverter_kw": 0.0,
+    "annual_pv_kwh": 0.0,
+    "renewable_fraction": 0.0,
+    "annual_diesel_l": 0.0,
+    "annual_heat_produced_kwh": 43826.5883,
+    "mean_cop_heating": 4.8512,
+    "annual_heating_demand_kwh_th": 43800.0,
+    "annual_hp_elec_kwh": 9256.6092,
+    "thermal_storage_capex": 45.42,
+    "annual_thermal_storage_cycles": 596.5791
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "pv_kw": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "zero \u2014 no PV"
+    },
+    "battery_kwh": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "zero \u2014 no battery"
+    },
+    "inverter_kw": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "zero \u2014 no DC bus"
+    },
+    "annual_pv_kwh": {
+      "type": "absolute",
+      "value": 1.0,
+      "note": "zero \u2014 no PV"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.001,
+      "note": "zero"
+    },
+    "annual_diesel_l": {
+      "type": "absolute",
+      "value": 1.0,
+      "note": "zero \u2014 no DG"
+    },
+    "annual_heat_produced_kwh": {
+      "type": "relative",
+      "value": 0.02,
+      "note": "\u00b12% \u2014 slight overshoot OK via TS buffer"
+    },
+    "mean_cop_heating": {
+      "type": "relative",
+      "value": 0.02,
+      "note": "\u00b12% \u2014 catalog polynomial deterministic"
+    },
+    "annual_heating_demand_kwh_th": {
+      "type": "relative",
+      "value": 0.01,
+      "note": "\u00b11%"
+    },
+    "annual_hp_elec_kwh": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "thermal_storage_capex": {
+      "type": "relative",
+      "value": 0.1,
+      "note": "\u00b110% \u2014 LP may choose different tank sizes"
+    },
+    "annual_thermal_storage_cycles": {
+      "type": "relative",
+      "value": 0.15,
+      "note": "\u00b115% \u2014 cycle counting depends on dispatch"
+    }
+  }
+}

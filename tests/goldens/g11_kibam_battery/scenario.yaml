@@ -1,0 +1,90 @@
+# SAMBA Golden Scenario g11 — KiBaM Lead-Acid Battery
+#
+# PURPOSE: Verify that KiBaM chemistry produces valid dispatch with correct
+#          SOC limits and that the LP approximation post-validation passes
+#          (Phase 16 feature).
+#
+# Topology: PV (investment) + KiBaM lead-acid battery (investment) + Inverter,
+#           off-grid.  No DG — pure solar + storage.
+# Location: San Francisco, CA
+# Year:     2023
+#
+# Key fields:
+#   components.battery.chemistry: kibam
+#   (KiBaM params auto-populated: c_ratio=0.42, k_rate=0.58)
+#
+# Sanity checks encoded in test_v2_goldens.py:
+#   - battery_soc_kwh always in [soc_min * capacity, soc_max * capacity]
+#   - battery_capacity_kwh (KiBaM) ≥ equivalent Li-ion capacity (lead-acid
+#     oversizes to achieve same service, due to lower usable window)
+
+schema_version: "1.1"
+
+project:
+  name: "g11 — KiBaM Lead-Acid Battery, PV + off-grid"
+  year: 2023
+  lifetime_years: 20
+  discount_rate_nominal: 0.06
+  inflation_rate: 0.02
+  re_incentive_rate: 0.0
+  grid_escalation_rate: 0.0
+  budget: null
+  currency: "USD"
+  capex_year: 0
+
+location:
+  latitude: 37.77
+  longitude: -122.42
+  altitude_m: 0.0
+  timezone: "America/Los_Angeles"
+
+weather:
+  source: "csv"
+  csv_path: "../../../examples/content/weather_sf_2019.csv"
+
+load:
+  source: "hourly_csv"
+  csv_path: "../../../examples/content/load_residential_8760.csv"
+
+components:
+
+  pv:
+    enabled: true
+    capacity_kw: null
+    capex_per_kw: 2368.0
+    opex_per_kw_yr: 30.36
+    lifetime_years: 25
+    derating_factor: 0.90
+    tilt_deg: 33.0
+    azimuth_deg: 180.0
+    module_type: "monofacial"
+    noct_celsius: 45.0
+    temp_coeff_pmax: -0.003
+
+  battery:
+    enabled: true
+    capacity_kwh: null
+    chemistry: "kibam"            # lead-acid KiBaM model (Phase 16)
+    # KiBaM params auto-populated: c_ratio=0.42, k_rate=0.58
+    capex_per_kwh: 350.0          # lead-acid cheaper than Li-ion
+    opex_per_kwh_yr: 5.0
+    lifetime_years: 7             # lead-acid shorter cycle life
+    soc_min: 0.40                 # 60% depth of discharge typical for lead-acid
+    soc_max: 1.00
+    soc_initial: 0.70
+    charge_efficiency: 0.85       # lower than Li-ion
+    discharge_efficiency: 0.95
+    c_rate_charge: 0.20           # lead-acid charges slowly (C/5)
+    c_rate_discharge: 0.50        # moderate discharge rate
+
+  inverter:
+    capacity_kw: null
+    capex_per_kw: 300.0
+    opex_per_kw_yr: 5.0
+    lifetime_years: 10
+    efficiency: 0.96
+
+tariff:
+  buy:
+    type: "flat"
+    rate_per_kwh: 0.0             # off-grid: no grid import

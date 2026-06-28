@@ -1,0 +1,96 @@
+{
+  "scenario": "g16_gas_vs_hp",
+  "description": "Merit-order dispatch: HP vs gas boiler at $0.25/kWh electricity, $0.04/kWh_th gas. Gas dominates economically; LP dispatches gas exclusively.",
+  "source": "samba_lp",
+  "samba_version": "3.0.0",
+  "run_date": "2026-03-03",
+  "notes": "With electricity at $0.25/kWh and COP~4.5, HP heat costs ~$0.055/kWh_th. Gas at $0.04/kWh_th fuel + boiler efficiency 0.85 = ~$0.047/kWh_th heat. LP correctly selects gas. annual_heat_produced_kwh=0 (HP unused). annual_gas_consumption_kwh_th > 43800 due to boiler thermal losses.",
+  "kpis": {
+    "npc": 41880.0177,
+    "lcoe": 0.624351,
+    "pv_kw": 0.0,
+    "battery_kwh": 0.0,
+    "inverter_kw": 0.0,
+    "annual_pv_kwh": 0.0,
+    "renewable_fraction": 0.0,
+    "annual_diesel_l": 0.0,
+    "annual_gas_consumption_kwh_th": 40929.3478,
+    "annual_gas_cost_usd": 1637.1739,
+    "annual_gas_co2_kg": 8390.5163,
+    "gas_boiler_npc": 21140.1388,
+    "annual_heating_demand_kwh_th": 43800.0,
+    "annual_heat_produced_kwh": 6145.0
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "pv_kw": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "zero \u2014 no PV"
+    },
+    "battery_kwh": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "zero \u2014 no battery"
+    },
+    "inverter_kw": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "zero \u2014 no DC bus"
+    },
+    "annual_pv_kwh": {
+      "type": "absolute",
+      "value": 1.0,
+      "note": "zero \u2014 no PV"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.001,
+      "note": "zero"
+    },
+    "annual_diesel_l": {
+      "type": "absolute",
+      "value": 1.0,
+      "note": "zero \u2014 no DG"
+    },
+    "annual_gas_consumption_kwh_th": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "annual_gas_cost_usd": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "annual_gas_co2_kg": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "gas_boiler_npc": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "annual_heating_demand_kwh_th": {
+      "type": "relative",
+      "value": 0.01,
+      "note": "\u00b11%"
+    },
+    "annual_heat_produced_kwh": {
+      "type": "absolute",
+      "value": 100.0,
+      "note": "near-zero \u2014 HP dispatch suppressed by merit order"
+    }
+  }
+}

@@ -1,0 +1,152 @@
+# SAMBA Golden Scenario g18 — Full Coupled PV + Battery + Grid + HP + TS + Gas + Degree-Day
+#
+# PURPOSE: Integration regression test for all v3 thermal domain components
+#          operating together in one scenario.
+#
+# Topology:
+#   Electrical: Grid (20 kW) + PV (investment up to 10 kW)
+#               + Battery (investment up to 30 kWh) + Inverter (investment)
+#   Thermal:    HP (both modes, catalog_auto)
+#               + Thermal Storage (investment up to 80 kWh_th)
+#               + Gas Supply (backup)
+#
+# Year:     2023
+#
+# Building:
+#   UA = 0.3 kW/K (moderate insulation), heating 20°C, cooling 26°C
+#
+# Expected:
+#   - PV + battery reduce grid import and electricity cost
+#   - HP meets most thermal demand; gas acts as backup/peak
+#   - Thermal storage shifts HP operation
+#   - thermal_lpsp_heating = 0.0, thermal_lpsp_cooling = 0.0, lpsp = 0.0
+#   - All KPIs finite and positive
+
+schema_version: "2.0"
+
+project:
+  name: "g18 — Full Coupled: PV+Batt+Grid+HP+TS+Gas+Degree-Day"
+  year: 2023
+  lifetime_years: 20
+  discount_rate_nominal: 0.06
+  inflation_rate: 0.02
+  re_incentive_rate: 0.0
+  grid_escalation_rate: 0.0
+  budget: null
+  currency: "USD"
+  capex_year: 0
+
+location:
+  latitude: 37.77
+  longitude: -122.42
+  altitude_m: 0.0
+  timezone: "America/Los_Angeles"
+
+weather:
+  source: "csv"
+  csv_path: "../../../examples/content/weather_sf_2019.csv"
+
+load:
+  source: "generic_annual_total"
+  annual_kwh: 7562.0           # realistic residential load (same as g01)
+  peak_month: "January"
+  thermal:
+    enabled: true
+    source: "degree_day"
+    building_ua_kw_per_k: 0.3
+    heating_setpoint_c: 20.0
+    cooling_setpoint_c: 26.0
+    distribution_efficiency: 0.95
+
+components:
+
+  pv:
+    enabled: true
+    capacity_kw: null           # investment sizing
+    capex_per_kw: 2368.0
+    opex_per_kw_yr: 30.36
+    lifetime_years: 25
+    derating_factor: 0.90
+    tilt_deg: 33.0
+    azimuth_deg: 180.0
+    module_type: "monofacial"
+    noct_celsius: 45.0
+    temp_coeff_pmax: -0.003
+
+  battery:
+    enabled: true
+    capacity_kwh: null          # investment sizing
+    chemistry: "li_ion"
+    capex_per_kwh: 1450.0
+    opex_per_kwh_yr: 10.0
+    lifetime_years: 10
+    soc_min: 0.10
+    soc_max: 1.00
+    soc_initial: 0.50
+    charge_efficiency: 0.9487
+    discharge_efficiency: 0.9487
+    c_rate_charge: 1.0
+    c_rate_discharge: 1.0
+
+  inverter:
+    capacity_kw: null           # investment sizing
+    capex_per_kw: 314.0
+    opex_per_kw_yr: 0.0
+    lifetime_years: 25
+    efficiency: 0.96
+
+  grid:
+    enabled: true
+    capacity_kw: 20.0
+    export_allowed: false
+    capex: 0.0
+    opex_yr: 0.0
+
+  heat_pump:
+    enabled: true
+    mode: "both"
+    sizing: "catalog_auto"
+    cop_source: "catalog"
+    capex: 5000.0
+    opex_per_year: 180.0
+    lifetime_years: 15
+
+  thermal_storage:
+    enabled: true
+    sizing: "investment"
+    capacity_min_kwh_th: 0.0
+    capacity_max_kwh_th: 80.0
+    loss_rate_per_hour: 0.002
+    soc_min: 0.05
+    soc_max: 0.95
+    soc_initial: 0.5
+    capex_per_kwh_th: 15.0
+    opex_per_year: 0.0
+    lifetime_years: 20
+
+  gas_supply:
+    enabled: true
+    boiler_efficiency: 0.92
+    tariff:
+      rate_type: "flat"
+      unit: "per_kwh_th"
+      flat_rate: 0.05
+    capex: 2000.0
+    opex_per_year: 100.0
+    lifetime_years: 20
+
+tariff:
+  buy:
+    type: "flat"
+    rate_per_kwh: 0.15
+
+  service_charge:
+    type: "flat"
+    monthly_flat: 10.0
+
+constraints:
+  max_lpsp: 0.001
+  thermal_lpsp_max: 0.01        # allow 1% thermal unmet for robustness
+
+objective:
+  type: "cost"

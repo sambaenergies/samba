@@ -1,0 +1,109 @@
+# SAMBA Golden Scenario g03 — Grid-tied PV + Battery, Tiered Buy Rate
+#
+# Topology: Grid + PV (investment) + Battery (investment) + Inverter (investment)
+# Location: San Francisco, CA, USA
+#           Tier 1: $0.1018/kWh up to 300 kWh/month
+#           Tier 2+: $0.1175/kWh above 300 kWh/month
+# Year:     2013
+#
+# Pure-SAMBA LP regression baseline (KPIs stored in reference.json).
+
+schema_version: "1.0"
+
+project:
+  name: "g03 — Grid-tied PV + Battery (Tiered Rate)"
+  year: 2013
+  lifetime_years: 25
+  discount_rate_nominal: 0.045
+  inflation_rate: 0.02
+  re_incentive_rate: 0.0
+  budget: null
+  currency: "USD"
+  capex_year: 0
+
+location:
+  latitude: 37.77
+  longitude: -122.42
+  altitude_m: 0.0
+  timezone: "America/Los_Angeles"
+
+weather:
+  source: "csv"
+  csv_path: "../../../examples/content/weather_sf_2019.csv"
+
+load:
+  source: "hourly_csv"
+  csv_path: "../../../examples/content/load_residential_8760.csv"
+
+components:
+
+  pv:
+    enabled: true
+    capacity_kw: null
+    capex_per_kw: 2368.0
+    opex_per_kw_yr: 30.36
+    lifetime_years: 25
+    derating_factor: 0.90
+    tilt_deg: 33.0
+    azimuth_deg: 180.0
+    module_type: "monofacial"
+    noct_celsius: 45.0
+    temp_coeff_pmax: -0.003
+
+  battery:
+    enabled: true
+    capacity_kwh: null
+    chemistry: "li_ion"
+    capex_per_kwh: 1450.0
+    opex_per_kwh_yr: 10.0
+    lifetime_years: 10
+    soc_min: 0.10
+    soc_max: 1.00
+    soc_initial: 0.50
+    charge_efficiency: 0.9487
+    discharge_efficiency: 0.9487
+    c_rate_charge: 1.0
+    c_rate_discharge: 1.0
+
+  inverter:
+    capacity_kw: null
+    capex_per_kw: 314.0
+    opex_per_kw_yr: 0.0
+    lifetime_years: 25
+    efficiency: 0.96
+
+  grid:
+    enabled: true
+    capacity_kw: 50.0
+    export_allowed: true
+    export_capacity_kw: 50.0
+    capex: 0.0
+    opex_yr: 0.0
+
+tariff:
+  buy:
+    # tieredPrices=[0.1018, 0.1175, 0.1175], tierMax=[300, ∞]
+    type: "tiered"
+    tiers:
+      - limit_kwh: 300.0           # First 300 kWh/month
+        rate_per_kwh: 0.1018
+      - limit_kwh: null            # All consumption above 300 kWh/month (unlimited)
+        rate_per_kwh: 0.1175
+
+  sell:
+    type: "flat"
+    rate_per_kwh: 0.042
+
+  service_charge:
+    type: "flat"
+    monthly_flat: 15.0
+
+constraints:
+  max_lpsp: 0.0001
+  min_renewable_fraction: 0.50
+  max_annual_diesel_l: null
+  max_battery_cycles_yr: null
+  force_grid_disconnect: false
+
+objective:
+  type: "cost"

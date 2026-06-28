@@ -1,0 +1,84 @@
+{
+  "scenario": "g13_heat_pump_heating_only",
+  "description": "Grid + HP (heating_only, catalog_auto): constant 5 kW_th heating load, flat $0.15/kWh. Validates catalog COP model and heating LPSP=0.",
+  "source": "samba_lp",
+  "samba_version": "3.0.0",
+  "run_date": "2026-03-03",
+  "notes": "annual_heat_produced = 5 kW x 8760 h = 43800 kWh_th. mean_cop_heating is set by the SF-climate outdoor temperatures and the physics-based COP model. No PV/battery so pv_kw=battery_kwh=inverter_kw=0.",
+  "kpis": {
+    "npc": 26967.7611,
+    "lcoe": 0.402038,
+    "pv_kw": 0.0,
+    "battery_kwh": 0.0,
+    "inverter_kw": 0.0,
+    "annual_pv_kwh": 0.0,
+    "renewable_fraction": 0.0,
+    "annual_diesel_l": 0.0,
+    "annual_heat_produced_kwh": 43800.0,
+    "mean_cop_heating": 4.8512,
+    "annual_heating_demand_kwh_th": 43800.0,
+    "annual_hp_elec_kwh": 9281.5125
+  },
+  "tolerances": {
+    "npc": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15% LP regression gate"
+    },
+    "lcoe": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15%"
+    },
+    "pv_kw": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "zero \u2014 no PV"
+    },
+    "battery_kwh": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "zero \u2014 no battery"
+    },
+    "inverter_kw": {
+      "type": "absolute",
+      "value": 0.1,
+      "note": "zero \u2014 no DC bus"
+    },
+    "annual_pv_kwh": {
+      "type": "absolute",
+      "value": 1.0,
+      "note": "zero \u2014 no PV"
+    },
+    "renewable_fraction": {
+      "type": "absolute",
+      "value": 0.001,
+      "note": "zero \u2014 grid-only"
+    },
+    "annual_diesel_l": {
+      "type": "absolute",
+      "value": 1.0,
+      "note": "zero \u2014 no DG"
+    },
+    "annual_heat_produced_kwh": {
+      "type": "relative",
+      "value": 0.01,
+      "note": "\u00b11% \u2014 exactly 5 kW \u00d7 8760h"
+    },
+    "mean_cop_heating": {
+      "type": "relative",
+      "value": 0.02,
+      "note": "\u00b12% \u2014 catalog polynomial is deterministic"
+    },
+    "annual_heating_demand_kwh_th": {
+      "type": "relative",
+      "value": 0.01,
+      "note": "\u00b11%"
+    },
+    "annual_hp_elec_kwh": {
+      "type": "relative",
+      "value": 0.05,
+      "note": "\u00b15% \u2014 electricity = heat / COP"
+    }
+  }
+}

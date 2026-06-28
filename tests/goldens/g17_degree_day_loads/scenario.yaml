@@ -1,0 +1,95 @@
+# SAMBA Golden Scenario g17 — Degree-Day Thermal Load Generation
+#
+# PURPOSE: Verify that degree-day load model generates physically sensible
+#          seasonal heating/cooling profiles from outdoor temperature.
+#
+# Topology: Grid (20 kW) + HP (both modes, catalog_auto) + Inverter
+# Year:     2023
+#
+# Building:
+#   UA coefficient = 0.5 kW/K (total heat loss / gain rate)
+#   Heating setpoint = 20°C, Cooling setpoint = 26°C
+#
+# Expected:
+#   - SF climate: mean T ≈ 14°C → heating demand dominates
+#   - annual_heating_demand_kwh_th >> annual_cooling_demand_kwh_th
+#   - Minimal cooling demand (summers are cool in SF)
+#   - Zero demand when 20°C ≤ T_outdoor ≤ 26°C (deadband)
+#   - thermal_lpsp_heating = 0.0, thermal_lpsp_cooling = 0.0
+
+schema_version: "2.0"
+
+project:
+  name: "g17 — Degree-Day Thermal Loads (SF temperate, UA=0.5 kW/K)"
+  year: 2023
+  lifetime_years: 15
+  discount_rate_nominal: 0.06
+  inflation_rate: 0.02
+  re_incentive_rate: 0.0
+  grid_escalation_rate: 0.0
+  budget: null
+  currency: "USD"
+  capex_year: 0
+
+location:
+  latitude: 37.77
+  longitude: -122.42
+  altitude_m: 0.0
+  timezone: "America/Los_Angeles"
+
+weather:
+  source: "csv"
+  csv_path: "../../../examples/content/weather_sf_2019.csv"
+
+load:
+  source: "generic_annual_total"
+  annual_kwh: 6000.0
+  peak_month: "January"
+  thermal:
+    enabled: true
+    source: "degree_day"
+    building_ua_kw_per_k: 0.5
+    heating_setpoint_c: 20.0
+    cooling_setpoint_c: 26.0
+    distribution_efficiency: 0.95
+
+components:
+
+  inverter:
+    capacity_kw: null
+    capex_per_kw: 314.0
+    opex_per_kw_yr: 0.0
+    lifetime_years: 25
+    efficiency: 0.96
+
+  grid:
+    enabled: true
+    capacity_kw: 20.0
+    export_allowed: false
+    capex: 0.0
+    opex_yr: 0.0
+
+  heat_pump:
+    enabled: true
+    mode: "both"
+    sizing: "catalog_auto"
+    cop_source: "catalog"
+    capex: 5000.0
+    opex_per_year: 180.0
+    lifetime_years: 15
+
+tariff:
+  buy:
+    type: "flat"
+    rate_per_kwh: 0.15
+
+  service_charge:
+    type: "flat"
+    monthly_flat: 10.0
+
+constraints:
+  max_lpsp: 0.001
+  thermal_lpsp_max: 0.0
+
+objective:
+  type: "cost"
