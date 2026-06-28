@@ -27,6 +27,7 @@ check:
     uv run ruff format --check .
     uv run ruff check .
     uv run mypy samba/
+    uv run mypy samba_service/
     uv run python scripts/export_schemas.py
     git diff --exit-code -- schemas
 
