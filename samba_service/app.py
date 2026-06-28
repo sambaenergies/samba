@@ -43,6 +43,7 @@ from fastapi.responses import FileResponse
 from pydantic import ValidationError
 
 from samba_service import jobs as _jobs
+from samba_service._contract import API_VERSION, CAPABILITIES, CONTRACT_VERSION
 from samba_service.auth import verify_api_key
 from samba_service.config import config
 from samba_service.jobs import Job, JobStatus, generate_run_id, store, submit_job
@@ -101,7 +102,7 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(
     title="SAMBA Service",
-    version="2.0.0",
+    version=API_VERSION,
     description=(
         "Microgrid optimisation REST API wrapping the SAMBA core library.\n\n"
         "**v2 features:** async job queue, artifact downloads, CORS, optional API key auth.\n\n"
@@ -195,6 +196,9 @@ def health() -> HealthResponse:
     return HealthResponse(
         status="ok",
         version=samba_version,
+        api_version=API_VERSION,
+        contract_version=CONTRACT_VERSION,
+        capabilities=CAPABILITIES,
         solver=config.solver,
         solver_ready=_solver_ready(config.solver),
         active_jobs=active,
