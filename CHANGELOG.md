@@ -4,8 +4,9 @@ All notable changes to SAMBA are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-Each released version is also a git tag; the links at the foot of this file compare
-adjacent releases.
+Releases from 5.3.1 (the first published to PyPI) are tagged in this repository and
+linked at the foot of this file; earlier versions predate its reinitialization and
+are listed for history without comparison links.
 
 ## [Unreleased]
 
@@ -35,7 +36,7 @@ hardening. No functional or API changes.
 - Unused `lucide-vue-next` dependency.
 - `@types/js-yaml` — js-yaml 5 ships its own type declarations.
 
-## [5.3.0] - 2026-06-14
+## 5.3.0 - 2026-06-14
 
 Schema-first cutover: the backend Pydantic models become the single source of
 truth for every shape that crosses to the UI, the UI's TypeScript types are
@@ -73,7 +74,7 @@ for the Python API and scenario schema.
   (`JobRecord`/`ValidationResponse`) are generated; no hand-written contract
   copies remain.
 
-## [5.2.0] - 2026-06-14
+## 5.2.0 - 2026-06-14
 
 Polishes the data-driven heat-pump COP as an explicit **opt-in**, keeping the
 license-clean first-principles physics model as the shipped default (resolving the
@@ -99,7 +100,7 @@ Backwards-compatible; no behaviour change to existing scenarios.
   reference-tree path (`_reference/`) so legitimate filenames (e.g.
   `cop_ashp_reference.csv`) no longer trip it.
 
-## [5.1.0] - 2026-06-14
+## 5.1.0 - 2026-06-14
 
 Post-independence follow-ups: a data-driven heat-pump COP option, a CLI/service
 thermal-resolution fix, and a documentation accuracy pass. Backwards-compatible.
@@ -134,7 +135,7 @@ thermal-resolution fix, and a documentation accuracy pass. Backwards-compatible.
 - Added a publication-readiness audit + post-v5 roadmap (internal planning);
   MPL-2.0 headers on all scripts (106/106).
 
-## [5.0.0] - 2026-06-13
+## 5.0.0 - 2026-06-13
 
 **Independent.** SAMBA is now a fully independent MPL-2.0 codebase with its own
 models, data, and constants ([Acknowledgements](docs/acknowledgements.md)). This is
@@ -194,7 +195,7 @@ primary authorities, which shifts golden KPI baselines, so it is a major version
 - Stale parity-diagnostic scripts that read the now-removed `_reference/` tree
   (`scripts/diag_kpi_delta.*`, `scripts/diag_model_deep.*`).
 
-## [4.0.0] - 2026-06-13
+## 4.0.0 - 2026-06-13
 
 **Real-World Readiness.** Closes real-world modelling and deployment gaps.
 Backwards-compatible: existing v1–v3 scenarios
@@ -229,7 +230,7 @@ run unchanged; all new behaviour is opt-in. `schema_version: "4.0"` accepted.
 - KPI contract → `2.1` (additive; new fields above).
 - Version is now single-sourced from `samba/_version.py` (hatchling dynamic).
 
-## [3.0.1] - 2026-06-13
+## 3.0.1 - 2026-06-13
 
 Maintenance release: tooling, test coverage, documentation, and example fixes.
 Resolves all outstanding items from the v2.0.0 pre-v3 audit. No breaking changes.
@@ -264,7 +265,7 @@ Resolves all outstanding items from the v2.0.0 pre-v3 audit. No breaking changes
   rule `S101` now bans `assert` in production code (audit C2).
 - Added MPL-2.0 license headers to the `samba_service` modules that lacked them.
 
-## [3.0.0] - 2026-03-04
+## 3.0.0 - 2026-03-04
 
 **Thermal Domain + Building Analysis.** `schema_version: "3.0"` for thermal scenarios;
 all v1/v2 scenarios remain valid.
@@ -315,7 +316,7 @@ all v1/v2 scenarios remain valid.
 - Weather auto-loaded for heat-pump scenarios that do not include PV (previously
   weather was only resolved when PV/wind was enabled).
 
-## [2.0.0] - 2026-03-03
+## 2.0.0 - 2026-03-03
 
 **Extended Electrical.** `schema_version: "1.1"` (backwards-compatible with `"1.0"`).
 
@@ -351,7 +352,7 @@ all v1/v2 scenarios remain valid.
 - KiBaM LP relaxation may produce up to ~10 timestep Q1 SOC violations; a post-validation
   warning is emitted; LPSP remains 0.
 
-## [1.0.0] - 2026-03-03
+## 1.0.0 - 2026-03-03
 
 **Electrical Core.** First release: end-to-end LP microgrid optimisation.
 
@@ -385,12 +386,3 @@ all v1/v2 scenarios remain valid.
 
 [Unreleased]: https://github.com/sambaenergies/samba/compare/v5.3.1...HEAD
 [5.3.1]: https://github.com/sambaenergies/samba/releases/tag/v5.3.1
-[5.3.0]: https://github.com/sambaenergies/samba/compare/v5.2.0...v5.3.0
-[5.2.0]: https://github.com/sambaenergies/samba/compare/v5.1.0...v5.2.0
-[5.1.0]: https://github.com/sambaenergies/samba/compare/v5.0.0...v5.1.0
-[5.0.0]: https://github.com/sambaenergies/samba/compare/v4.0.0...v5.0.0
-[4.0.0]: https://github.com/sambaenergies/samba/compare/v3.0.1...v4.0.0
-[3.0.1]: https://github.com/sambaenergies/samba/compare/v3.0.0...v3.0.1
-[3.0.0]: https://github.com/sambaenergies/samba/compare/v2.0.0...v3.0.0
-[2.0.0]: https://github.com/sambaenergies/samba/compare/v1.0.0...v2.0.0
-[1.0.0]: https://github.com/sambaenergies/samba/releases/tag/v1.0.0
