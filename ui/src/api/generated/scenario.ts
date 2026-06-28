@@ -220,14 +220,7 @@ export type RatePerKwh3 = number;
 export type Weekday = boolean;
 export type Weekend = boolean;
 export type Type1 =
-  | "flat"
-  | "tou"
-  | "tiered"
-  | "seasonal"
-  | "seasonal_tiered"
-  | "monthly"
-  | "monthly_tiered"
-  | "ul_tou";
+  "flat" | "tou" | "tiered" | "seasonal" | "seasonal_tiered" | "monthly" | "monthly_tiered" | "ul_tou";
 export type Hours1 = number[] | null;
 export type RatePerKwMonth = number;
 export type AnnualExcessCreditFraction = number;
