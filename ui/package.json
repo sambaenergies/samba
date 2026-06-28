@@ -26,7 +26,6 @@
     "echarts": "^6.0.0",
     "js-yaml": "^5.2.0",
     "jszip": "^3.10.1",
-    "lucide-vue-next": "^0.577.0",
     "papaparse": "^5.5.3",
     "pinia": "^3.0.4",
     "tailwindcss": "^4.2.1",
