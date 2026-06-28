@@ -181,6 +181,20 @@ class TestHealthV2:
         assert isinstance(data["active_jobs"], int)
         assert data["active_jobs"] >= 0
 
+    def test_health_reports_api_version_from_constant(self, client: TestClient) -> None:
+        from samba_service._contract import API_VERSION
+
+        data = client.get("/health").json()
+        assert data["api_version"] == API_VERSION
+
+    def test_health_reports_contract_version_and_capabilities(self, client: TestClient) -> None:
+        from samba_service._contract import CAPABILITIES, CONTRACT_VERSION
+
+        data = client.get("/health").json()
+        assert data["contract_version"] == CONTRACT_VERSION
+        assert data["capabilities"] == CAPABILITIES
+        assert isinstance(data["capabilities"], list)
+
 
 # ---------------------------------------------------------------------------
 # TestDocsV2
@@ -208,9 +222,11 @@ class TestDocsV2:
         paths = client.get("/openapi.json").json()["paths"]
         assert "/health" in paths
 
-    def test_openapi_version_is_v2(self, client: TestClient) -> None:
+    def test_openapi_version_matches_api_version_constant(self, client: TestClient) -> None:
+        from samba_service._contract import API_VERSION
+
         info = client.get("/openapi.json").json()["info"]
-        assert info["version"] == "2.0.0"
+        assert info["version"] == API_VERSION
 
 
 # ---------------------------------------------------------------------------

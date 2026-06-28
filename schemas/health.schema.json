@@ -1,10 +1,25 @@
 {
-  "description": "Response body for ''GET /api/v1/health''.\n\nAttributes\n----------\nstatus:\n    Always ''\"ok\"'' when the service is running.\nversion:\n    Installed ''samba-core'' package version string.\nsolver:\n    Configured solver name (from :attr:'~samba_service.config.ServiceConfig.solver').\nsolver_ready:\n    ''True'' when the configured solver binary/package is importable.\nactive_jobs:\n    Number of jobs currently in ''PENDING'' or ''RUNNING'' state.",
+  "description": "Response body for ''GET /health'' (public, unversioned liveness probe).\n\nAttributes\n----------\nstatus:\n    Always ''\"ok\"'' when the service is running.\nversion:\n    Installed ''samba-core'' package version string. **Display only** \u2014 do not\n    key API compatibility off it.\napi_version:\n    SemVer of the HTTP API surface (equals the OpenAPI ''info.version''); the\n    value an external client checks for compatibility. From\n    :data:'samba_service._contract.API_VERSION'.\ncontract_version:\n    Version of the published data/schema contract (OpenAPI + companion JSON\n    Schemas) the client generated its types from. From\n    :data:'samba_service._contract.CONTRACT_VERSION'.\ncapabilities:\n    Stable advertised feature flags the client may branch on\n    (:data:'samba_service._contract.CAPABILITIES').\nsolver:\n    Configured solver name (from :attr:'~samba_service.config.ServiceConfig.solver').\nsolver_ready:\n    ''True'' when the configured solver binary/package is importable.\nactive_jobs:\n    Number of jobs currently in ''PENDING'' or ''RUNNING'' state.\n\nThe three version axes (samba-core package, API/contract, and the OpenAPI\nspec version owned by FastAPI) are documented in\n:mod:'samba_service._contract'.",
   "properties": {
     "active_jobs": {
       "default": 0,
       "title": "Active Jobs",
       "type": "integer"
+    },
+    "api_version": {
+      "title": "Api Version",
+      "type": "string"
+    },
+    "capabilities": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Capabilities",
+      "type": "array"
+    },
+    "contract_version": {
+      "title": "Contract Version",
+      "type": "string"
     },
     "solver": {
       "title": "Solver",
@@ -27,6 +42,9 @@
   },
   "required": [
     "version",
+    "api_version",
+    "contract_version",
+    "capabilities",
     "solver",
     "solver_ready"
   ],
