@@ -10,6 +10,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
+from samba.run_result.contracts import KpiSummary, SizingRow
 from samba_service.jobs import JobStatus
 
 # ---------------------------------------------------------------------------
@@ -175,9 +176,12 @@ class JobStatusResponse(BaseModel):
     completed_at:
         UTC timestamp of job completion (success or failure), or ''None''.
     kpis:
-        KPI dict (28 fields).  Present only when ''status == "completed"''.
+        Typed :class:'~samba.run_result.contracts.KpiSummary'.  Present only when
+        ''status == "completed"''.  Degraded to ''None'' (with a logged warning)
+        if a persisted legacy row's stored KPIs no longer match the contract.
     sizing:
-        List of sizing records.  Present only when ''status == "completed"''.
+        List of typed :class:'~samba.run_result.contracts.SizingRow'.  Present
+        only when ''status == "completed"''; degraded as above on legacy rows.
     artifacts:
         List of downloadable filenames available under
         ''GET /api/v1/jobs/{run_id}/artifacts/{filename}''.
@@ -191,8 +195,8 @@ class JobStatusResponse(BaseModel):
     submitted_at: datetime
     started_at: datetime | None = None
     completed_at: datetime | None = None
-    kpis: dict[str, Any] | None = None
-    sizing: list[dict[str, Any]] | None = None
+    kpis: KpiSummary | None = None
+    sizing: list[SizingRow] | None = None
     artifacts: list[str] = []
     error: str | None = None
     solve_time_s: float | None = None

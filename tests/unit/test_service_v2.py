@@ -30,8 +30,36 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
+from samba._kpi_contract import KPI_CONTRACT_VERSION
+from samba.run_result.contracts import KpiSummary
 from samba_service.app import app
 from samba_service.jobs import Job, JobStatus, store
+
+
+def _valid_kpis() -> dict[str, Any]:
+    """A fully-populated ``KpiSummary``-valid dict (type-appropriate zeros).
+
+    ``KpiSummary`` has ~50 all-required fields with ``extra="forbid"``, so a job
+    response only keeps its ``kpis`` if every field is present and no extra keys
+    appear. Built by introspection so it stays correct as the contract evolves.
+    """
+    out: dict[str, Any] = {}
+    for name, field in KpiSummary.model_fields.items():
+        ann = field.annotation
+        if ann is str:
+            out[name] = KPI_CONTRACT_VERSION if name == "kpi_contract_version" else ""
+        elif ann is int:
+            out[name] = 0
+        elif ann is float:
+            out[name] = 0.0
+        else:  # list[float]
+            out[name] = []
+    return out
+
+
+_VALID_SIZING = [
+    {"component": "pv", "capacity": 10.0, "unit": "kW", "count": 1, "capital_cost": 9000.0}
+]
 
 # ---------------------------------------------------------------------------
 # Solver availability guard
@@ -115,8 +143,8 @@ def completed_job(tmp_path: Path) -> Generator[Job, None, None]:
     run_dir = tmp_path / "run_test_completed"
     run_dir.mkdir()
 
-    kpis = {"npc": 123456.0, "lcoe": 0.42, "lcos": 0.18}
-    sizing = [{"component": "pv", "capacity_kw": 10.0}]
+    kpis = {**_valid_kpis(), "npc": 123456.0, "lcoe": 0.42}
+    sizing = _VALID_SIZING
     (run_dir / "kpis.json").write_text(json.dumps(kpis), encoding="utf-8")
     (run_dir / "sizing.csv").write_text("component,capacity_kw\npv,10.0\n", encoding="utf-8")
 
@@ -464,6 +492,15 @@ class TestJobGet:
         assert data["kpis"] is not None
         assert isinstance(data["kpis"], dict)
 
+    def test_completed_job_kpis_and_sizing_match_contract(
+        self, client: TestClient, completed_job: Job
+    ) -> None:
+        data = client.get(f"/api/v1/jobs/{completed_job.run_id}").json()
+        # kpis serializes against KpiSummary (full key set, no extras).
+        assert set(data["kpis"]) == set(KpiSummary.model_fields)
+        # sizing rows serialize against SizingRow.
+        assert data["sizing"] == _VALID_SIZING
+
     def test_completed_job_has_artifacts_list(self, client: TestClient, completed_job: Job) -> None:
         data = client.get(f"/api/v1/jobs/{completed_job.run_id}").json()
         assert "artifacts" in data
@@ -471,6 +508,50 @@ class TestJobGet:
         # The fixture wrote kpis.json and sizing.csv
         assert "kpis.json" in data["artifacts"]
         assert "sizing.csv" in data["artifacts"]
+
+
+# ---------------------------------------------------------------------------
+# TestKpisContractDegrade — persisted legacy rows must not break list_jobs
+# ---------------------------------------------------------------------------
+
+
+class TestKpisContractDegrade:
+    """A legacy persisted row whose stored KPIs no longer validate must degrade
+    that row's kpis/sizing to null -- never 500 the whole job list."""
+
+    def test_legacy_bad_kpis_row_degrades_not_500(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from samba_service.persistent_jobs import PersistentJobStore
+
+        pstore = PersistentJobStore(tmp_path / "jobs.db")
+        now = datetime.now(UTC)
+        # Good row: contract-valid KPIs.
+        pstore.create("good-row")
+        pstore.update(
+            "good-row",
+            status=JobStatus.COMPLETED,
+            completed_at=now,
+            kpis=_valid_kpis(),
+            sizing=_VALID_SIZING,
+        )
+        # Legacy row: an extra/renamed key extra='forbid' now rejects.
+        pstore.create("bad-row")
+        pstore.update(
+            "bad-row",
+            status=JobStatus.COMPLETED,
+            completed_at=now,
+            kpis={**_valid_kpis(), "legacy_renamed_key": 1.0},
+            sizing=_VALID_SIZING,
+        )
+        monkeypatch.setattr("samba_service.app.store", pstore)
+
+        resp = TestClient(app).get("/api/v1/jobs")
+        assert resp.status_code == 200  # one bad row does NOT break the list
+        by_id = {j["run_id"]: j for j in resp.json()}
+        assert by_id["bad-row"]["kpis"] is None  # degraded
+        assert by_id["good-row"]["kpis"] is not None  # unaffected
+        assert set(by_id["good-row"]["kpis"]) == set(KpiSummary.model_fields)
 
 
 # ---------------------------------------------------------------------------
