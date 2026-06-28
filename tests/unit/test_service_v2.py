@@ -52,8 +52,10 @@ def _valid_kpis() -> dict[str, Any]:
             out[name] = 0
         elif ann is float:
             out[name] = 0.0
-        else:  # list[float]
+        elif ann == list[float]:
             out[name] = []
+        else:  # pragma: no cover - guards against a future field of an untyped shape
+            raise AssertionError(f"_valid_kpis: unhandled annotation {ann!r} for field {name!r}")
     return out
 
 
@@ -552,6 +554,31 @@ class TestKpisContractDegrade:
         assert by_id["bad-row"]["kpis"] is None  # degraded
         assert by_id["good-row"]["kpis"] is not None  # unaffected
         assert set(by_id["good-row"]["kpis"]) == set(KpiSummary.model_fields)
+
+    def test_fresh_inmemory_bad_kpis_degrades_and_logs(
+        self, client: TestClient, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """AC bullet 2: a fresh completed job with malformed KPIs returns 200 with
+        kpis=null and a logged warning -- not a silent passthrough, not a 500."""
+        import logging
+
+        bad = Job(
+            run_id="bad-fresh-id",
+            status=JobStatus.COMPLETED,
+            submitted_at=datetime.now(UTC),
+            completed_at=datetime.now(UTC),
+            kpis={**_valid_kpis(), "legacy_renamed_key": 1.0},
+            sizing=_VALID_SIZING,
+        )
+        store._jobs["bad-fresh-id"] = bad
+        try:
+            with caplog.at_level(logging.WARNING):
+                resp = client.get("/api/v1/jobs/bad-fresh-id")
+            assert resp.status_code == 200  # not an opaque 500
+            assert resp.json()["kpis"] is None  # degraded
+            assert any("degrading to null" in r.message for r in caplog.records)  # not silent
+        finally:
+            store._jobs.pop("bad-fresh-id", None)
 
 
 # ---------------------------------------------------------------------------
