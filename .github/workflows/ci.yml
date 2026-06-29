@@ -191,9 +191,11 @@ jobs:
         id: base
         run: |
           base="origin/${{ github.base_ref }}"
-          git show "$base:openapi.json" > /tmp/base-openapi.json
-          pr_cv=$(grep -oP 'CONTRACT_VERSION = "\K[^"]+' samba_service/_contract.py)
-          base_cv=$(git show "$base:samba_service/_contract.py" | grep -oP 'CONTRACT_VERSION = "\K[^"]+')
+          # Write inside the workspace -- the oasdiff action runs in a Docker
+          # container that only mounts $GITHUB_WORKSPACE, so a /tmp path is invisible.
+          git show "$base:openapi.json" > base-openapi.json
+          pr_cv=$(grep -oP -m1 'CONTRACT_VERSION = "\K[^"]+' samba_service/_contract.py)
+          base_cv=$(git show "$base:samba_service/_contract.py" | grep -oP -m1 'CONTRACT_VERSION = "\K[^"]+')
           echo "pr_major=${pr_cv%%.*}" >> "$GITHUB_OUTPUT"
           echo "base_major=${base_cv%%.*}" >> "$GITHUB_OUTPUT"
 
@@ -202,7 +204,7 @@ jobs:
         continue-on-error: true
         uses: oasdiff/oasdiff-action/breaking@v0.1.4
         with:
-          base: /tmp/base-openapi.json
+          base: base-openapi.json
           revision: openapi.json
           fail-on: ERR
 
