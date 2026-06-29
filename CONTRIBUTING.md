@@ -94,3 +94,28 @@ Three independent versions, defined authoritatively in
 | **API version** (`API_VERSION`, e.g. `1.0.0`) | `_contract.py` → FastAPI `info.version` | the HTTP surface changes (routes / request-response shapes / status codes); major matches the `/api/vN` namespace |
 | **Contract version** (`CONTRACT_VERSION`, e.g. `1.0`) | `_contract.py` | the published contract bundle (openapi + schemas) changes in a way consumers must track |
 | OpenAPI spec (`3.1.0`) | owned by FastAPI | — (not configured here) |
+
+## Branch protection & CI gates
+
+`main` requires these status checks (GitHub repo setting, not in-repo) before a PR
+can merge:
+
+- **`Check (ruff + mypy + schema drift)`**, **`Test (Python 3.11–3.14)`** — the
+  Python gate.
+- **`UI (just ui-check)`** — the **same-tree** UI gate: `gen:types` drift +
+  eslint + vue-tsc + vitest, relating `ui/contract/` to the backend export.
+- **`UI external-consumer build (isolation)`** — builds `ui/` from a copy with no
+  Python tree or repo-root `schemas/` above it, proving self-containment, plus a
+  reach-through guard.
+- **`UI compatibility (baseline UI vs PR contract)`** — typechecks the base
+  branch's UI against the PR's contract, catching a backend change that breaks a
+  shape the UI consumes.
+- **`Contract breaking-change check`** — oasdiff fails a breaking `openapi.json`
+  change unless `CONTRACT_VERSION` major was bumped.
+
+The `UI (just ui-check)` and `UI external-consumer build` jobs are **both** kept:
+the former is the same-tree drift gate, the latter proves self-containment — they
+verify different things. The compatibility and breaking-change jobs are
+**PR-only** (they need a base ref); if a GitHub merge queue is ever adopted, add
+`|| github.event_name == 'merge_group'` to their `if:` so a required check is not
+skipped in the queue.
