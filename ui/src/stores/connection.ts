@@ -2,8 +2,15 @@ import { defineStore } from "pinia";
 import { useStorage } from "@vueuse/core";
 
 import { fetchHealth } from "@/api/health";
+// The contract this UI build was generated against (vendored in ui/contract/).
+import contractManifest from "../../contract/manifest.json";
 
-export type ConnectionStatus = "checking" | "connected" | "unreachable";
+export type ConnectionStatus = "checking" | "connected" | "unreachable" | "incompatible";
+
+/** Major version segment, for SemVer-major compatibility comparison. */
+function majorOf(version: string | null | undefined): string | null {
+  return version ? version.split(".")[0] : null;
+}
 
 export const useConnectionStore = defineStore("connection", {
   state: () => ({
@@ -11,6 +18,7 @@ export const useConnectionStore = defineStore("connection", {
     apiKey: useStorage<string | null>("samba.apiKey", null).value,
     status: "checking" as ConnectionStatus,
     version: null as string | null,
+    apiVersion: null as string | null,
     solver: null as string | null,
     pollTimer: null as ReturnType<typeof setInterval> | null,
   }),
@@ -20,8 +28,12 @@ export const useConnectionStore = defineStore("connection", {
       try {
         const health = await fetchHealth();
         this.version = health.version;
+        this.apiVersion = health.api_version;
         this.solver = health.solver;
-        this.status = "connected";
+        // The backend reachable but speaking an incompatible API major is a
+        // distinct, actionable state from "unreachable".
+        const built = majorOf(contractManifest.api_version);
+        this.status = majorOf(health.api_version) === built ? "connected" : "incompatible";
       } catch {
         this.status = "unreachable";
       }

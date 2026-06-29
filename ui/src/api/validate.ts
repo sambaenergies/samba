@@ -1,6 +1,10 @@
-import { apiPost } from "@/api/client";
+import { apiClient, unwrap } from "@/api/http";
 import type { ValidationResponse } from "@/api/types";
 
-export function validateScenario(scenario: unknown): Promise<ValidationResponse> {
-  return apiPost<ValidationResponse>("/api/v1/validate", { scenario });
+export async function validateScenario(scenario: unknown): Promise<ValidationResponse> {
+  return unwrap(
+    await apiClient.POST("/api/v1/validate", {
+      body: { scenario: scenario as { [key: string]: unknown } },
+    }),
+  );
 }

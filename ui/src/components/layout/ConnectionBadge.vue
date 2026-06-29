@@ -7,6 +7,7 @@ const connection = useConnectionStore();
 const dotClass = computed(() => {
   if (connection.status === "connected") return "bg-emerald-500";
   if (connection.status === "checking") return "bg-amber-500";
+  if (connection.status === "incompatible") return "bg-orange-500";
   return "bg-red-500";
 });
 </script>

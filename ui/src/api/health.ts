@@ -1,6 +1,6 @@
-import { apiGet } from "@/api/client";
+import { apiClient, unwrap } from "@/api/http";
 import type { HealthResponse } from "@/api/types";
 
-export function fetchHealth(): Promise<HealthResponse> {
-  return apiGet<HealthResponse>("/health");
+export async function fetchHealth(): Promise<HealthResponse> {
+  return unwrap(await apiClient.GET("/health", {}));
 }
