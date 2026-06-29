@@ -119,3 +119,5 @@ verify different things. The compatibility and breaking-change jobs are
 **PR-only** (they need a base ref); if a GitHub merge queue is ever adopted, add
 `|| github.event_name == 'merge_group'` to their `if:` so a required check is not
 skipped in the queue.
+
+> **Out of scope (deferred):** actual UI extraction and the desktop/registry product boundary are catalogued in [docs/deferred-extraction.md](docs/deferred-extraction.md).
