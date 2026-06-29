@@ -5,9 +5,8 @@
 // ---------------------------------------------------------------------------
 import type { CashflowYear, EconomicsReport } from "./generated/economics";
 import type { DispatchContract } from "./generated/dispatch";
-import type { HealthResponse } from "./generated/health";
-import type { JobStatus, JobStatusResponse } from "./generated/job";
 import type { KpiSummary } from "./generated/kpis";
+import type { components } from "./generated/openapi";
 import type {
   Battery,
   Components,
@@ -30,10 +29,19 @@ import type {
   WindTurbine,
 } from "./generated/scenario";
 import type { SizingRow } from "./generated/sizing";
-import type { ValidateResponse } from "./generated/validate";
 
-export type { CashflowYear, EconomicsReport, DispatchContract, HealthResponse, KpiSummary, SizingRow };
-export type { JobStatus, JobStatusResponse };
+// HTTP envelope types come from the published OpenAPI contract (openapi.ts).
+// Artifact/domain types (parsed client-side from downloaded files) come from the
+// companion JSON-Schema generators above.
+type Schemas = components["schemas"];
+export type HealthResponse = Schemas["HealthResponse"];
+export type ValidateResponse = Schemas["ValidateResponse"];
+export type JobStatusResponse = Schemas["JobStatusResponse"];
+export type JobSubmitResponse = Schemas["JobSubmitResponse"];
+export type ErrorResponse = Schemas["ErrorResponse"];
+export type JobStatus = Schemas["JobStatus"];
+
+export type { CashflowYear, EconomicsReport, DispatchContract, KpiSummary, SizingRow };
 
 /** A job record as returned by the service (alias of the generated contract). */
 export type JobRecord = JobStatusResponse;
