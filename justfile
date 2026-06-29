@@ -18,6 +18,10 @@ lint:
 schemas:
     uv run python scripts/export_schemas.py
 
+# Export the deterministic OpenAPI document (run after changing service routes/models)
+openapi:
+    uv run python scripts/export_openapi.py
+
 # Regenerate all logo derivatives (favicon, app icons, mono variants) from the source SVG
 logo:
     uv run --with pillow python scripts/gen_logo_assets.py
@@ -30,6 +34,8 @@ check:
     uv run mypy samba_service/
     uv run python scripts/export_schemas.py
     git diff --exit-code -- schemas
+    uv run python scripts/export_openapi.py
+    git diff --exit-code -- openapi.json
 
 # UI checks: regenerate types from schemas (drift gate), lint, type-check, unit tests
 ui-check:
