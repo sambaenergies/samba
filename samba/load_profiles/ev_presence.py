@@ -155,7 +155,8 @@ def find_departure_hours(presence: np.ndarray) -> np.ndarray:
         raise ValueError("presence must have 8760 elements")
     is_away = (presence == 0.0).astype(np.int8)
     transitions = np.diff(is_away, prepend=is_away[0])
-    return np.where(transitions == 1)[0].astype(np.int64)
+    departures: np.ndarray = np.where(transitions == 1)[0].astype(np.int64)
+    return departures
 
 
 def find_arrival_hours(presence: np.ndarray) -> np.ndarray:
@@ -178,7 +179,8 @@ def find_arrival_hours(presence: np.ndarray) -> np.ndarray:
         raise ValueError("presence must have 8760 elements")
     is_home = (presence == 1.0).astype(np.int8)
     transitions = np.diff(is_home, prepend=is_home[0])
-    return np.where(transitions == 1)[0].astype(np.int64)
+    arrivals: np.ndarray = np.where(transitions == 1)[0].astype(np.int64)
+    return arrivals
 
 
 def build_travel_depletion_array(
