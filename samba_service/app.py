@@ -134,8 +134,26 @@ app.add_middleware(
 # :class:`~samba_service.models.ErrorResponse`. Applied uniformly to all routes
 # so the published contract carries typed error shapes (consumers generate one
 # error type, not per-route guesses).
+#
+# Descriptions are pinned explicitly rather than left to FastAPI's default, which
+# derives them from ``http.HTTPStatus(code).phrase`` -- a Python-stdlib string
+# that is NOT stable across interpreter versions (e.g. 422 became "Unprocessable
+# Content" in 3.13, was "Unprocessable Entity"). Pinning keeps the exported
+# openapi.json byte-identical across the Python test matrix.
+_ERROR_DESCRIPTIONS: dict[int, str] = {
+    400: "Bad request",
+    401: "Unauthorized",
+    404: "Not found",
+    409: "Conflict",
+    422: "Validation error",
+    500: "Internal server error",
+}
 ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
-    code: {"model": ErrorResponse} for code in (400, 401, 404, 409, 422, 500)
+    code: {"model": ErrorResponse, "description": desc}
+    for code, desc in _ERROR_DESCRIPTIONS.items()
+}
+_HEALTH_ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
+    500: {"model": ErrorResponse, "description": _ERROR_DESCRIPTIONS[500]},
 }
 
 
@@ -275,7 +293,7 @@ def _job_to_response(job: Job) -> JobStatusResponse:
         "Returns service status, samba-core version, API/contract version, advertised "
         "capabilities, solver availability, and active job count."
     ),
-    responses={500: {"model": ErrorResponse}},
+    responses=_HEALTH_ERROR_RESPONSES,
     tags=["meta"],
 )
 def health() -> HealthResponse:
