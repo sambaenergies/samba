@@ -11,8 +11,50 @@ on:
     branches: [main]
 
 jobs:
+  changes:
+    # Detect docs-only changes so the heavy jobs can skip without leaving a
+    # required status check unreported. The single always-running `ci-gate` job
+    # (bottom) is the required context; the per-job `if:` guards below read this.
+    # Fail-safe: anything that isn't provably docs-only runs the full gate.
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.detect.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Detect whether non-docs files changed
+        id: detect
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            echo "Non-PR event (${{ github.event_name }}): running the full gate."
+            exit 0
+          fi
+          base="origin/${{ github.base_ref }}"
+          changed=$(git diff --name-only "$base"...HEAD)
+          echo "Changed files:"; echo "$changed"
+          if [ -z "$changed" ]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            echo "Empty diff -- running the full gate (fail-safe)."
+            exit 0
+          fi
+          # Docs-only iff every changed path matches a doc pattern. grep -qvE is
+          # true when any line does NOT match -> there is real code -> run.
+          if echo "$changed" | grep -qvE '(\.md$|^docs/|^LICENSE$)'; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            echo "Code/contract files changed: running the full gate."
+          else
+            echo "code=false" >> "$GITHUB_OUTPUT"
+            echo "Docs-only change: heavy jobs will skip; ci-gate still reports."
+          fi
+
   check:
     name: Check (ruff + mypy + schema drift)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -31,6 +73,8 @@ jobs:
 
   test:
     name: Test (Python ${{ matrix.python-version }}, ${{ matrix.os }})
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -62,6 +106,8 @@ jobs:
 
   ui:
     name: UI (just ui-check)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -96,6 +142,8 @@ jobs:
     # boundary and is intentionally NOT cargo-built in isolation here. The in-tree
     # `ui` job above remains the same-tree drift gate (ui/contract vs backend export).
     name: UI external-consumer build (isolation)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -145,8 +193,9 @@ jobs:
     # prefer that tag as a stricter baseline -- v5.3.1 predates ui/contract/ so it
     # is not usable here yet. PR-only (needs a base ref).
     name: UI compatibility (baseline UI vs PR contract)
+    needs: changes
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v7
         with:
@@ -180,8 +229,9 @@ jobs:
     # regressions; a last-release tag would be stricter once UI releases are tagged).
     # PR-only (needs a base ref).
     name: Contract breaking-change check
+    needs: changes
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v7
         with:
@@ -220,3 +270,38 @@ jobs:
           fi
           echo "::error::Breaking openapi.json change without a CONTRACT_VERSION major bump. Either keep the change backward-compatible or bump CONTRACT_VERSION major in samba_service/_contract.py."
           exit 1
+
+  ci-gate:
+    # The single required status check. It ALWAYS runs (no path gate) so it always
+    # reports, and it passes only when every upstream job either succeeded or was
+    # skipped (docs-only PRs skip the heavy jobs). Any failure/cancellation here
+    # fails the gate. Branch protection requires THIS context only -- so docs-only
+    # PRs merge instantly without burning the matrix, while code PRs are still
+    # fully gated transitively.
+    name: CI gate
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [changes, check, test, ui, ui-external, compat-ui, contract-breaking]
+    steps:
+      - name: Require all upstream jobs to succeed or skip
+        run: |
+          fail=0
+          check_result() {
+            echo "$1 = $2"
+            case "$2" in
+              success|skipped) ;;
+              *) echo "::error::job '$1' did not pass (result=$2)"; fail=1 ;;
+            esac
+          }
+          check_result changes          '${{ needs.changes.result }}'
+          check_result check            '${{ needs.check.result }}'
+          check_result test             '${{ needs.test.result }}'
+          check_result ui               '${{ needs.ui.result }}'
+          check_result ui-external      '${{ needs.ui-external.result }}'
+          check_result compat-ui        '${{ needs.compat-ui.result }}'
+          check_result contract-breaking '${{ needs.contract-breaking.result }}'
+          if [ "$fail" -ne 0 ]; then
+            echo "CI gate: FAILED"
+            exit 1
+          fi
+          echo "CI gate: all upstream jobs succeeded or were skipped."
