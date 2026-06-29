@@ -1,0 +1,35 @@
+{
+  "additionalProperties": false,
+  "description": "One row of ``sizing.csv`` (the optimiser's chosen component sizing).",
+  "properties": {
+    "capacity": {
+      "title": "Capacity",
+      "type": "number"
+    },
+    "capital_cost": {
+      "title": "Capital Cost",
+      "type": "number"
+    },
+    "component": {
+      "title": "Component",
+      "type": "string"
+    },
+    "count": {
+      "title": "Count",
+      "type": "integer"
+    },
+    "unit": {
+      "title": "Unit",
+      "type": "string"
+    }
+  },
+  "required": [
+    "component",
+    "capacity",
+    "unit",
+    "count",
+    "capital_cost"
+  ],
+  "title": "SizingRow",
+  "type": "object"
+}

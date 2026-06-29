@@ -1,0 +1,1288 @@
+{
+  "components": {
+    "schemas": {
+      "ErrorResponse": {
+        "description": "Shared envelope for every non-2xx response.\n\nAttributes\n----------\ndetail:\n    Human-readable summary of the failure (the FastAPI default error key).\nerrors:\n    Optional per-item failure lines. For scenario-validation failures this\n    is ''ScenarioValidationError.format_errors().splitlines()'' -- the **same\n    list** ''POST /api/v1/validate'' returns in its 200 body for the same\n    input -- so a client can render field errors identically regardless of\n    which endpoint rejected the scenario. ''None'' for errors that have no\n    line-level breakdown (404 / 409 / 401 / generic 400).",
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "errors": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errors"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "description": "Response body for ''GET /health'' (public, unversioned liveness probe).\n\nAttributes\n----------\nstatus:\n    Always ''\"ok\"'' when the service is running.\nversion:\n    Installed ''samba-core'' package version string. **Display only** \u2014 do not\n    key API compatibility off it.\napi_version:\n    SemVer of the HTTP API surface (equals the OpenAPI ''info.version''); the\n    value an external client checks for compatibility. From\n    :data:'samba_service._contract.API_VERSION'.\ncontract_version:\n    Version of the published data/schema contract (OpenAPI + companion JSON\n    Schemas) the client generated its types from. From\n    :data:'samba_service._contract.CONTRACT_VERSION'.\ncapabilities:\n    Stable advertised feature flags the client may branch on\n    (:data:'samba_service._contract.CAPABILITIES').\nsolver:\n    Configured solver name (from :attr:'~samba_service.config.ServiceConfig.solver').\nsolver_ready:\n    ''True'' when the configured solver binary/package is importable.\nactive_jobs:\n    Number of jobs currently in ''PENDING'' or ''RUNNING'' state.\n\nThe three version axes (samba-core package, API/contract, and the OpenAPI\nspec version owned by FastAPI) are documented in\n:mod:'samba_service._contract'.",
+        "properties": {
+          "active_jobs": {
+            "default": 0,
+            "title": "Active Jobs",
+            "type": "integer"
+          },
+          "api_version": {
+            "title": "Api Version",
+            "type": "string"
+          },
+          "capabilities": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Capabilities",
+            "type": "array"
+          },
+          "contract_version": {
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "solver": {
+            "title": "Solver",
+            "type": "string"
+          },
+          "solver_ready": {
+            "title": "Solver Ready",
+            "type": "boolean"
+          },
+          "status": {
+            "const": "ok",
+            "default": "ok",
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "api_version",
+          "contract_version",
+          "capabilities",
+          "solver",
+          "solver_ready"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "JobStatus": {
+        "description": "Life-cycle state of a background solve job.",
+        "enum": [
+          "pending",
+          "running",
+          "completed",
+          "failed"
+        ],
+        "title": "JobStatus",
+        "type": "string"
+      },
+      "JobStatusResponse": {
+        "description": "Response body for ''GET /api/v1/jobs/{run_id}''.\n\nAttributes\n----------\nrun_id:\n    UUID4 job identifier.\nstatus:\n    Current :class:'~samba_service.jobs.JobStatus'.\nsubmitted_at:\n    UTC timestamp of job submission.\nstarted_at:\n    UTC timestamp when the solver thread picked up the job, or ''None''.\ncompleted_at:\n    UTC timestamp of job completion (success or failure), or ''None''.\nkpis:\n    Typed :class:'~samba.run_result.contracts.KpiSummary'.  Present only when\n    ''status == \"completed\"''.  Degraded to ''None'' (with a logged warning)\n    if a persisted legacy row's stored KPIs no longer match the contract.\nsizing:\n    List of typed :class:'~samba.run_result.contracts.SizingRow'.  Present\n    only when ''status == \"completed\"''; degraded as above on legacy rows.\nartifacts:\n    List of downloadable filenames available under\n    ''GET /api/v1/jobs/{run_id}/artifacts/{filename}''.\n    Populated only when ''status == \"completed\"''.\nerror:\n    Human-readable error description when ''status == \"failed\"''.",
+        "properties": {
+          "artifacts": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Artifacts",
+            "type": "array"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "kpis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KpiSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "sizing": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SizingRow"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sizing"
+          },
+          "solve_time_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Solve Time S"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "submitted_at": {
+            "format": "date-time",
+            "title": "Submitted At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "status",
+          "submitted_at"
+        ],
+        "title": "JobStatusResponse",
+        "type": "object"
+      },
+      "JobSubmitRequest": {
+        "description": "Request body for ''POST /api/v1/jobs''.\n\nAttributes\n----------\nscenario:\n    Raw scenario mapping with the same structure as a scenario YAML file\n    (''schema_version'', ''project'', ''load'', ''components'', etc.).\nrun_dir_name:\n    Optional custom stem for the run output directory.  When ''None'',\n    the service creates a subdirectory named by the job's ''run_id''.",
+        "properties": {
+          "run_dir_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Dir Name"
+          },
+          "scenario": {
+            "additionalProperties": true,
+            "description": "Scenario mapping with the same structure as a scenario YAML file (schema_version, project, location, load, components, tariff, ...). Validated against the SAMBA Scenario model; see scenario.schema.json for the full shape.",
+            "title": "Scenario",
+            "type": "object"
+          }
+        },
+        "required": [
+          "scenario"
+        ],
+        "title": "JobSubmitRequest",
+        "type": "object"
+      },
+      "JobSubmitResponse": {
+        "description": "Response body for ''POST /api/v1/jobs'' (HTTP 202 Accepted).\n\nAttributes\n----------\nrun_id:\n    UUID4 string identifying the submitted job.\nstatus:\n    Initial status -- always ''\"pending\"'' immediately after submission.\npoll_url:\n    Relative URL for polling job state:\n    ''/api/v1/jobs/{run_id}''.",
+        "properties": {
+          "poll_url": {
+            "title": "Poll Url",
+            "type": "string"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "status": {
+            "const": "pending",
+            "default": "pending",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "poll_url"
+        ],
+        "title": "JobSubmitResponse",
+        "type": "object"
+      },
+      "KpiSummary": {
+        "additionalProperties": false,
+        "description": "Mirrors ``kpis.json`` (the dict from :func:`samba.run_result.kpis.compute_kpis`).\n\nThe key set is fixed: heat-pump / thermal / gas KPIs default to zero (or an\nempty string) when those components are not modelled, rather than being\nomitted. ``renewable_fraction``, ``lpsp``, and ``lem`` are fractions in\n``[0, 1]`` (the UI renders the first two as percentages).",
+        "properties": {
+          "annual_cool_produced_kwh": {
+            "title": "Annual Cool Produced Kwh",
+            "type": "number"
+          },
+          "annual_cooling_demand_kwh_th": {
+            "title": "Annual Cooling Demand Kwh Th",
+            "type": "number"
+          },
+          "annual_demand_charge_usd": {
+            "title": "Annual Demand Charge Usd",
+            "type": "number"
+          },
+          "annual_energy_net_usd": {
+            "title": "Annual Energy Net Usd",
+            "type": "number"
+          },
+          "annual_ev_charge_kwh": {
+            "title": "Annual Ev Charge Kwh",
+            "type": "number"
+          },
+          "annual_ev_discharge_kwh": {
+            "title": "Annual Ev Discharge Kwh",
+            "type": "number"
+          },
+          "annual_gas_co2_kg": {
+            "title": "Annual Gas Co2 Kg",
+            "type": "number"
+          },
+          "annual_gas_consumption_kwh_th": {
+            "title": "Annual Gas Consumption Kwh Th",
+            "type": "number"
+          },
+          "annual_gas_cost_usd": {
+            "title": "Annual Gas Cost Usd",
+            "type": "number"
+          },
+          "annual_heat_produced_kwh": {
+            "title": "Annual Heat Produced Kwh",
+            "type": "number"
+          },
+          "annual_heating_demand_kwh_th": {
+            "title": "Annual Heating Demand Kwh Th",
+            "type": "number"
+          },
+          "annual_hp_elec_kwh": {
+            "title": "Annual Hp Elec Kwh",
+            "type": "number"
+          },
+          "annual_thermal_storage_cycles": {
+            "title": "Annual Thermal Storage Cycles",
+            "type": "number"
+          },
+          "annual_throughput_cycles": {
+            "title": "Annual Throughput Cycles",
+            "type": "number"
+          },
+          "battery_eol_year": {
+            "title": "Battery Eol Year",
+            "type": "integer"
+          },
+          "crf": {
+            "title": "Crf",
+            "type": "number"
+          },
+          "dg_emissions_kg": {
+            "title": "Dg Emissions Kg",
+            "type": "number"
+          },
+          "dg_fuel_consumption_liters": {
+            "title": "Dg Fuel Consumption Liters",
+            "type": "number"
+          },
+          "dg_operating_hours": {
+            "title": "Dg Operating Hours",
+            "type": "integer"
+          },
+          "ev_v2g_revenue": {
+            "title": "Ev V2G Revenue",
+            "type": "number"
+          },
+          "gas_boiler_capex": {
+            "title": "Gas Boiler Capex",
+            "type": "number"
+          },
+          "gas_boiler_npc": {
+            "title": "Gas Boiler Npc",
+            "type": "number"
+          },
+          "grid_emissions_kg": {
+            "title": "Grid Emissions Kg",
+            "type": "number"
+          },
+          "hp_model_name": {
+            "title": "Hp Model Name",
+            "type": "string"
+          },
+          "initial_investment": {
+            "title": "Initial Investment",
+            "type": "number"
+          },
+          "kpi_contract_version": {
+            "title": "Kpi Contract Version",
+            "type": "string"
+          },
+          "lcoe": {
+            "title": "Lcoe",
+            "type": "number"
+          },
+          "lem": {
+            "title": "Lem",
+            "type": "number"
+          },
+          "lpsp": {
+            "title": "Lpsp",
+            "type": "number"
+          },
+          "mean_cop_cooling": {
+            "title": "Mean Cop Cooling",
+            "type": "number"
+          },
+          "mean_cop_heating": {
+            "title": "Mean Cop Heating",
+            "type": "number"
+          },
+          "monthly_grid_cost": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Monthly Grid Cost",
+            "type": "array"
+          },
+          "monthly_grid_kwh": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Monthly Grid Kwh",
+            "type": "array"
+          },
+          "npc": {
+            "title": "Npc",
+            "type": "number"
+          },
+          "operating_cost": {
+            "title": "Operating Cost",
+            "type": "number"
+          },
+          "peak_demand_kw_by_month": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Peak Demand Kw By Month",
+            "type": "array"
+          },
+          "renewable_fraction": {
+            "title": "Renewable Fraction",
+            "type": "number"
+          },
+          "thermal_lpsp_cooling": {
+            "title": "Thermal Lpsp Cooling",
+            "type": "number"
+          },
+          "thermal_lpsp_heating": {
+            "title": "Thermal Lpsp Heating",
+            "type": "number"
+          },
+          "thermal_storage_capex": {
+            "title": "Thermal Storage Capex",
+            "type": "number"
+          },
+          "thermal_storage_cooling_kwh_th": {
+            "title": "Thermal Storage Cooling Kwh Th",
+            "type": "number"
+          },
+          "thermal_storage_heating_kwh_th": {
+            "title": "Thermal Storage Heating Kwh Th",
+            "type": "number"
+          },
+          "total_battery_charge": {
+            "title": "Total Battery Charge",
+            "type": "number"
+          },
+          "total_battery_discharge": {
+            "title": "Total Battery Discharge",
+            "type": "number"
+          },
+          "total_dg_generation": {
+            "title": "Total Dg Generation",
+            "type": "number"
+          },
+          "total_emissions_kg": {
+            "title": "Total Emissions Kg",
+            "type": "number"
+          },
+          "total_energy_dump": {
+            "title": "Total Energy Dump",
+            "type": "number"
+          },
+          "total_fuel_cost": {
+            "title": "Total Fuel Cost",
+            "type": "number"
+          },
+          "total_grid_bought": {
+            "title": "Total Grid Bought",
+            "type": "number"
+          },
+          "total_grid_cost_net": {
+            "title": "Total Grid Cost Net",
+            "type": "number"
+          },
+          "total_grid_sold": {
+            "title": "Total Grid Sold",
+            "type": "number"
+          },
+          "total_load_served": {
+            "title": "Total Load Served",
+            "type": "number"
+          },
+          "total_om_cost": {
+            "title": "Total Om Cost",
+            "type": "number"
+          },
+          "total_pv_generation": {
+            "title": "Total Pv Generation",
+            "type": "number"
+          },
+          "total_replacement_cost": {
+            "title": "Total Replacement Cost",
+            "type": "number"
+          },
+          "total_salvage": {
+            "title": "Total Salvage",
+            "type": "number"
+          },
+          "total_unmet_load": {
+            "title": "Total Unmet Load",
+            "type": "number"
+          },
+          "total_wt_generation": {
+            "title": "Total Wt Generation",
+            "type": "number"
+          }
+        },
+        "required": [
+          "kpi_contract_version",
+          "npc",
+          "lcoe",
+          "operating_cost",
+          "initial_investment",
+          "total_replacement_cost",
+          "total_om_cost",
+          "total_fuel_cost",
+          "total_salvage",
+          "total_grid_cost_net",
+          "crf",
+          "total_load_served",
+          "total_unmet_load",
+          "lpsp",
+          "renewable_fraction",
+          "total_pv_generation",
+          "total_wt_generation",
+          "total_dg_generation",
+          "total_grid_bought",
+          "total_grid_sold",
+          "annual_demand_charge_usd",
+          "annual_energy_net_usd",
+          "total_energy_dump",
+          "total_battery_charge",
+          "total_battery_discharge",
+          "annual_throughput_cycles",
+          "battery_eol_year",
+          "dg_emissions_kg",
+          "grid_emissions_kg",
+          "total_emissions_kg",
+          "lem",
+          "dg_operating_hours",
+          "dg_fuel_consumption_liters",
+          "annual_ev_charge_kwh",
+          "annual_ev_discharge_kwh",
+          "ev_v2g_revenue",
+          "monthly_grid_kwh",
+          "monthly_grid_cost",
+          "peak_demand_kw_by_month",
+          "hp_model_name",
+          "annual_hp_elec_kwh",
+          "annual_heat_produced_kwh",
+          "annual_cool_produced_kwh",
+          "mean_cop_heating",
+          "mean_cop_cooling",
+          "thermal_storage_heating_kwh_th",
+          "thermal_storage_cooling_kwh_th",
+          "annual_thermal_storage_cycles",
+          "thermal_storage_capex",
+          "annual_heating_demand_kwh_th",
+          "annual_cooling_demand_kwh_th",
+          "thermal_lpsp_heating",
+          "thermal_lpsp_cooling",
+          "annual_gas_consumption_kwh_th",
+          "annual_gas_cost_usd",
+          "annual_gas_co2_kg",
+          "gas_boiler_capex",
+          "gas_boiler_npc"
+        ],
+        "title": "KpiSummary",
+        "type": "object"
+      },
+      "SizingRow": {
+        "additionalProperties": false,
+        "description": "One row of ``sizing.csv`` (the optimiser's chosen component sizing).",
+        "properties": {
+          "capacity": {
+            "title": "Capacity",
+            "type": "number"
+          },
+          "capital_cost": {
+            "title": "Capital Cost",
+            "type": "number"
+          },
+          "component": {
+            "title": "Component",
+            "type": "string"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "component",
+          "capacity",
+          "unit",
+          "count",
+          "capital_cost"
+        ],
+        "title": "SizingRow",
+        "type": "object"
+      },
+      "ValidateRequest": {
+        "description": "Request body for ''POST /api/v1/validate''.\n\nAttributes\n----------\nscenario:\n    Raw scenario mapping to validate against the SAMBA schema.",
+        "properties": {
+          "scenario": {
+            "additionalProperties": true,
+            "description": "Scenario mapping with the same structure as a scenario YAML file (schema_version, project, location, load, components, tariff, ...). Validated against the SAMBA Scenario model; see scenario.schema.json for the full shape.",
+            "title": "Scenario",
+            "type": "object"
+          }
+        },
+        "required": [
+          "scenario"
+        ],
+        "title": "ValidateRequest",
+        "type": "object"
+      },
+      "ValidateResponse": {
+        "description": "Response body for ''POST /api/v1/validate''.\n\nAttributes\n----------\nvalid:\n    ''True'' when the scenario passes all schema checks.\nerrors:\n    List of ''\"field.path: message\"'' strings describing every validation\n    failure.  Empty when ''valid is True''.",
+        "properties": {
+          "errors": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "valid": {
+            "title": "Valid",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "valid"
+        ],
+        "title": "ValidateResponse",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "APIKeyHeader": {
+        "in": "header",
+        "name": "X-API-Key",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "description": "Microgrid optimisation REST API wrapping the SAMBA core library.\n\n**Features:** async job queue, artifact downloads, CORS, optional API key auth.\n\n**Security notice:** when ''SAMBA_API_KEY'' is unset, no authentication is enforced. For trusted / local use only unless an auth proxy is in front.",
+    "title": "SAMBA Service",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/jobs": {
+      "get": {
+        "description": "Return all job records, sorted by submission time descending.\n\nUse the optional ''?status='' query parameter to filter.",
+        "operationId": "listJobs",
+        "parameters": [
+          {
+            "description": "Filter by status (pending/running/completed/failed)",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by status (pending/running/completed/failed)",
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/JobStatusResponse"
+                  },
+                  "title": "Response Listjobs",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "List all jobs",
+        "tags": [
+          "jobs"
+        ]
+      },
+      "post": {
+        "description": "Validate the scenario dict and enqueue an async solve job.\n\nReturns HTTP 202 with ''run_id'' immediately.  Poll\n''GET /api/v1/jobs/{run_id}'' for status.",
+        "operationId": "submitJob",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobSubmitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobSubmitResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Submit an async optimisation job",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/api/v1/jobs/{run_id}": {
+      "delete": {
+        "description": "Remove a job from the in-process store.\n\nOptionally delete the on-disk artifact directory when\n''?delete_artifacts=true''.  Returns HTTP 204 on success.",
+        "operationId": "deleteJob",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Also delete the artifact directory from disk.",
+            "in": "query",
+            "name": "delete_artifacts",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Also delete the artifact directory from disk.",
+              "title": "Delete Artifacts",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Delete a job record",
+        "tags": [
+          "jobs"
+        ]
+      },
+      "get": {
+        "description": "Return the current status of a submitted job.",
+        "operationId": "getJob",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Poll job status",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/api/v1/jobs/{run_id}/artifacts/{filename}": {
+      "get": {
+        "description": "Stream a result file from the job's artifact directory.\n\nAllowed filenames: ''scenario.yaml'', ''kpis.json'', ''sizing.csv'',\n''dispatch.parquet'', ''dispatch.csv'', ''economics.json'',\n''annual_summary.csv'', ''tariff.parquet'', ''metadata.json'',\n''solver.log''.\n\nReturns HTTP 400 on any path-traversal attempt.",
+        "operationId": "getArtifact",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "filename",
+            "required": true,
+            "schema": {
+              "title": "Filename",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Download a result artifact",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/api/v1/validate": {
+      "post": {
+        "description": "Validate *request.scenario* against the SAMBA Pydantic schema.\n\nAlways returns HTTP 200; check the ''valid'' field in the response.",
+        "operationId": "validateScenario",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Validate a scenario",
+        "tags": [
+          "scenarios"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "Returns service status, samba-core version, API/contract version, advertised capabilities, solver availability, and active job count.",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Service health check",
+        "tags": [
+          "meta"
+        ]
+      }
+    }
+  }
+}
