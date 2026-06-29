@@ -11,7 +11,7 @@
 
 import createClient from "openapi-fetch";
 
-import { apiFetch } from "@/api/client";
+import { ApiError, apiFetch } from "@/api/client";
 import type { paths } from "@/api/generated/openapi";
 
 const SENTINEL_BASE = "http://contract.invalid";
@@ -30,3 +30,13 @@ export const apiClient = createClient<paths>({
   baseUrl: SENTINEL_BASE,
   fetch: contractFetch as typeof fetch,
 });
+
+/** Unwrap an openapi-fetch result to its typed body without an `as` cast.
+ *  `contractFetch` throws on non-2xx, so `data` is present for any body-returning
+ *  endpoint; the guard only defends against an unexpected empty 2xx body. */
+export function unwrap<T>(result: { data?: T; response: Response }): T {
+  if (result.data === undefined) {
+    throw new ApiError(result.response.status, "empty response body");
+  }
+  return result.data;
+}

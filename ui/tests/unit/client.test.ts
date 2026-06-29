@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createPinia, setActivePinia } from "pinia";
 
-import { apiGet, ApiError } from "@/api/client";
+import { apiFetch, ApiError } from "@/api/client";
 import { useConnectionStore } from "@/stores/connection";
 
-describe("api client", () => {
+describe("apiFetch", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
   });
 
-  it("sets X-API-Key when present", async () => {
+  it("sets X-API-Key when present and returns the response on 2xx", async () => {
     const store = useConnectionStore();
     store.setApiKey("secret");
 
@@ -21,10 +21,10 @@ describe("api client", () => {
         headers: { "content-type": "application/json" },
       });
     });
-
     vi.stubGlobal("fetch", mockFetch);
-    const result = await apiGet<{ ok: boolean }>("/health");
-    expect(result.ok).toBe(true);
+
+    const response = await apiFetch("/health", { method: "GET" });
+    expect(response.ok).toBe(true);
   });
 
   it("throws ApiError on non-2xx", async () => {
@@ -38,6 +38,6 @@ describe("api client", () => {
       ),
     );
 
-    await expect(apiGet("/health")).rejects.toBeInstanceOf(ApiError);
+    await expect(apiFetch("/health")).rejects.toBeInstanceOf(ApiError);
   });
 });

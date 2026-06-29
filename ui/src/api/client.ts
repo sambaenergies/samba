@@ -42,21 +42,3 @@ export async function apiFetch(path: string, init?: RequestInit): Promise<Respon
 
   return response;
 }
-
-export async function apiGet<T>(path: string): Promise<T> {
-  const response = await apiFetch(path, { method: "GET" });
-  return (await response.json()) as T;
-}
-
-export async function apiPost<T>(path: string, payload: unknown): Promise<T> {
-  const response = await apiFetch(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  return (await response.json()) as T;
-}
-
-export async function apiDelete(path: string): Promise<void> {
-  await apiFetch(path, { method: "DELETE" });
-}
