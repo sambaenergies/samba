@@ -97,8 +97,11 @@ Three independent versions, defined authoritatively in
 
 ## Branch protection & CI gates
 
-`main` requires these status checks (GitHub repo setting, not in-repo) before a PR
-can merge:
+`main` requires a **single** status check (GitHub repo setting, not in-repo)
+before a PR can merge: **`CI gate`**. It is an aggregator that `needs:` every
+job below and passes only when each one **succeeded or was skipped** — so it is
+the one context branch protection points at, and it always reports (it has no
+path filter). The jobs it gates:
 
 - **`Check (ruff + mypy + schema drift)`**, **`Test (Python 3.11–3.14)`** — the
   Python gate.
@@ -117,7 +120,13 @@ The `UI (just ui-check)` and `UI external-consumer build` jobs are **both** kept
 the former is the same-tree drift gate, the latter proves self-containment — they
 verify different things. The compatibility and breaking-change jobs are
 **PR-only** (they need a base ref); if a GitHub merge queue is ever adopted, add
-`|| github.event_name == 'merge_group'` to their `if:` so a required check is not
-skipped in the queue.
+`|| github.event_name == 'merge_group'` to their `if:` so they still run in the
+queue.
+
+**Docs-only path filtering.** A `changes` job detects when a PR touches only docs
+(`**.md`, `docs/**`, `LICENSE`); when so, the heavy jobs **skip** (saving the
+matrix) while `CI gate` still runs and passes — because branch protection requires
+only `CI gate`, the docs PR merges instantly. Adding a *new* required check means
+adding it to `CI gate`'s `needs:` list, not to the branch-protection settings.
 
 > **Out of scope (deferred):** actual UI extraction and the desktop/registry product boundary are catalogued in [docs/deferred-extraction.md](docs/deferred-extraction.md).
