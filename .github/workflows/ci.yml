@@ -135,3 +135,85 @@ jobs:
           npm run gen:types
           npm run build
           npm run test
+
+  compat-ui:
+    # A backend contract change must not silently break a shape the UI consumes.
+    # Generate types for the BASELINE UI (the base branch's ui/) from THIS PR's
+    # vendored contract and typecheck it: a vue-tsc error means the PR's backend
+    # shape change broke the baseline UI. Baseline = base branch ui/ (the current
+    # committed UI). NOTE: once a UI release is tagged with the ui/contract/ setup,
+    # prefer that tag as a stricter baseline -- v5.3.1 predates ui/contract/ so it
+    # is not usable here yet. PR-only (needs a base ref).
+    name: UI compatibility (baseline UI vs PR contract)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Typecheck the baseline UI against this PR's contract
+        run: |
+          base="origin/${{ github.base_ref }}"
+          git worktree add /tmp/base-ui "$base"
+          # Overlay this PR's vendored contract (drift-gated == a fresh export) onto
+          # the baseline UI, then regenerate its types and typecheck.
+          rm -f /tmp/base-ui/ui/contract/*.schema.json
+          cp -f ui/contract/openapi.json ui/contract/manifest.json ui/contract/*.schema.json /tmp/base-ui/ui/contract/
+          cd /tmp/base-ui/ui
+          npm ci
+          npm run gen:types
+          npx vue-tsc --noEmit
+
+  contract-breaking:
+    # Fail on a BREAKING openapi.json change unless the data/schema contract major
+    # (CONTRACT_VERSION in samba_service/_contract.py -- NOT the FastAPI app/info
+    # version) was bumped. oasdiff runs as a CI-only GitHub Action (no local install,
+    # per workstation-configs). Baseline = base branch openapi.json (catches per-PR
+    # regressions; a last-release tag would be stricter once UI releases are tagged).
+    # PR-only (needs a base ref).
+    name: Contract breaking-change check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Resolve base openapi + CONTRACT_VERSION majors
+        id: base
+        run: |
+          base="origin/${{ github.base_ref }}"
+          git show "$base:openapi.json" > /tmp/base-openapi.json
+          pr_cv=$(grep -oP 'CONTRACT_VERSION = "\K[^"]+' samba_service/_contract.py)
+          base_cv=$(git show "$base:samba_service/_contract.py" | grep -oP 'CONTRACT_VERSION = "\K[^"]+')
+          echo "pr_major=${pr_cv%%.*}" >> "$GITHUB_OUTPUT"
+          echo "base_major=${base_cv%%.*}" >> "$GITHUB_OUTPUT"
+
+      - name: oasdiff breaking-change detection
+        id: oasdiff
+        continue-on-error: true
+        uses: oasdiff/oasdiff-action/breaking@v1
+        with:
+          base: /tmp/base-openapi.json
+          revision: openapi.json
+
+      - name: Gate on CONTRACT_VERSION major bump
+        run: |
+          if [ "${{ steps.oasdiff.outcome }}" != "failure" ]; then
+            echo "No breaking contract changes detected."
+            exit 0
+          fi
+          if [ "${{ steps.base.outputs.pr_major }}" -gt "${{ steps.base.outputs.base_major }}" ]; then
+            echo "Breaking change allowed: CONTRACT_VERSION major bumped (${{ steps.base.outputs.base_major }} -> ${{ steps.base.outputs.pr_major }})."
+            exit 0
+          fi
+          echo "::error::Breaking openapi.json change without a CONTRACT_VERSION major bump. Either keep the change backward-compatible or bump CONTRACT_VERSION major in samba_service/_contract.py."
+          exit 1
