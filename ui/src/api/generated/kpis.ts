@@ -1,6 +1,6 @@
 /* eslint-disable */
 /**
- * AUTO-GENERATED from ../../../schemas by `npm run gen:types`. DO NOT EDIT.
+ * AUTO-GENERATED from ui/contract by `npm run gen:types`. DO NOT EDIT.
  * Source of truth: backend Pydantic models (see scripts/export_schemas.py).
  */
 

@@ -1,0 +1,465 @@
+{
+  "$defs": {
+    "JobStatus": {
+      "description": "Life-cycle state of a background solve job.",
+      "enum": [
+        "pending",
+        "running",
+        "completed",
+        "failed"
+      ],
+      "title": "JobStatus",
+      "type": "string"
+    },
+    "KpiSummary": {
+      "additionalProperties": false,
+      "description": "Mirrors ``kpis.json`` (the dict from :func:`samba.run_result.kpis.compute_kpis`).\n\nThe key set is fixed: heat-pump / thermal / gas KPIs default to zero (or an\nempty string) when those components are not modelled, rather than being\nomitted. ``renewable_fraction``, ``lpsp``, and ``lem`` are fractions in\n``[0, 1]`` (the UI renders the first two as percentages).",
+      "properties": {
+        "annual_cool_produced_kwh": {
+          "title": "Annual Cool Produced Kwh",
+          "type": "number"
+        },
+        "annual_cooling_demand_kwh_th": {
+          "title": "Annual Cooling Demand Kwh Th",
+          "type": "number"
+        },
+        "annual_demand_charge_usd": {
+          "title": "Annual Demand Charge Usd",
+          "type": "number"
+        },
+        "annual_energy_net_usd": {
+          "title": "Annual Energy Net Usd",
+          "type": "number"
+        },
+        "annual_ev_charge_kwh": {
+          "title": "Annual Ev Charge Kwh",
+          "type": "number"
+        },
+        "annual_ev_discharge_kwh": {
+          "title": "Annual Ev Discharge Kwh",
+          "type": "number"
+        },
+        "annual_gas_co2_kg": {
+          "title": "Annual Gas Co2 Kg",
+          "type": "number"
+        },
+        "annual_gas_consumption_kwh_th": {
+          "title": "Annual Gas Consumption Kwh Th",
+          "type": "number"
+        },
+        "annual_gas_cost_usd": {
+          "title": "Annual Gas Cost Usd",
+          "type": "number"
+        },
+        "annual_heat_produced_kwh": {
+          "title": "Annual Heat Produced Kwh",
+          "type": "number"
+        },
+        "annual_heating_demand_kwh_th": {
+          "title": "Annual Heating Demand Kwh Th",
+          "type": "number"
+        },
+        "annual_hp_elec_kwh": {
+          "title": "Annual Hp Elec Kwh",
+          "type": "number"
+        },
+        "annual_thermal_storage_cycles": {
+          "title": "Annual Thermal Storage Cycles",
+          "type": "number"
+        },
+        "annual_throughput_cycles": {
+          "title": "Annual Throughput Cycles",
+          "type": "number"
+        },
+        "battery_eol_year": {
+          "title": "Battery Eol Year",
+          "type": "integer"
+        },
+        "crf": {
+          "title": "Crf",
+          "type": "number"
+        },
+        "dg_emissions_kg": {
+          "title": "Dg Emissions Kg",
+          "type": "number"
+        },
+        "dg_fuel_consumption_liters": {
+          "title": "Dg Fuel Consumption Liters",
+          "type": "number"
+        },
+        "dg_operating_hours": {
+          "title": "Dg Operating Hours",
+          "type": "integer"
+        },
+        "ev_v2g_revenue": {
+          "title": "Ev V2G Revenue",
+          "type": "number"
+        },
+        "gas_boiler_capex": {
+          "title": "Gas Boiler Capex",
+          "type": "number"
+        },
+        "gas_boiler_npc": {
+          "title": "Gas Boiler Npc",
+          "type": "number"
+        },
+        "grid_emissions_kg": {
+          "title": "Grid Emissions Kg",
+          "type": "number"
+        },
+        "hp_model_name": {
+          "title": "Hp Model Name",
+          "type": "string"
+        },
+        "initial_investment": {
+          "title": "Initial Investment",
+          "type": "number"
+        },
+        "kpi_contract_version": {
+          "title": "Kpi Contract Version",
+          "type": "string"
+        },
+        "lcoe": {
+          "title": "Lcoe",
+          "type": "number"
+        },
+        "lem": {
+          "title": "Lem",
+          "type": "number"
+        },
+        "lpsp": {
+          "title": "Lpsp",
+          "type": "number"
+        },
+        "mean_cop_cooling": {
+          "title": "Mean Cop Cooling",
+          "type": "number"
+        },
+        "mean_cop_heating": {
+          "title": "Mean Cop Heating",
+          "type": "number"
+        },
+        "monthly_grid_cost": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Monthly Grid Cost",
+          "type": "array"
+        },
+        "monthly_grid_kwh": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Monthly Grid Kwh",
+          "type": "array"
+        },
+        "npc": {
+          "title": "Npc",
+          "type": "number"
+        },
+        "operating_cost": {
+          "title": "Operating Cost",
+          "type": "number"
+        },
+        "peak_demand_kw_by_month": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Peak Demand Kw By Month",
+          "type": "array"
+        },
+        "renewable_fraction": {
+          "title": "Renewable Fraction",
+          "type": "number"
+        },
+        "thermal_lpsp_cooling": {
+          "title": "Thermal Lpsp Cooling",
+          "type": "number"
+        },
+        "thermal_lpsp_heating": {
+          "title": "Thermal Lpsp Heating",
+          "type": "number"
+        },
+        "thermal_storage_capex": {
+          "title": "Thermal Storage Capex",
+          "type": "number"
+        },
+        "thermal_storage_cooling_kwh_th": {
+          "title": "Thermal Storage Cooling Kwh Th",
+          "type": "number"
+        },
+        "thermal_storage_heating_kwh_th": {
+          "title": "Thermal Storage Heating Kwh Th",
+          "type": "number"
+        },
+        "total_battery_charge": {
+          "title": "Total Battery Charge",
+          "type": "number"
+        },
+        "total_battery_discharge": {
+          "title": "Total Battery Discharge",
+          "type": "number"
+        },
+        "total_dg_generation": {
+          "title": "Total Dg Generation",
+          "type": "number"
+        },
+        "total_emissions_kg": {
+          "title": "Total Emissions Kg",
+          "type": "number"
+        },
+        "total_energy_dump": {
+          "title": "Total Energy Dump",
+          "type": "number"
+        },
+        "total_fuel_cost": {
+          "title": "Total Fuel Cost",
+          "type": "number"
+        },
+        "total_grid_bought": {
+          "title": "Total Grid Bought",
+          "type": "number"
+        },
+        "total_grid_cost_net": {
+          "title": "Total Grid Cost Net",
+          "type": "number"
+        },
+        "total_grid_sold": {
+          "title": "Total Grid Sold",
+          "type": "number"
+        },
+        "total_load_served": {
+          "title": "Total Load Served",
+          "type": "number"
+        },
+        "total_om_cost": {
+          "title": "Total Om Cost",
+          "type": "number"
+        },
+        "total_pv_generation": {
+          "title": "Total Pv Generation",
+          "type": "number"
+        },
+        "total_replacement_cost": {
+          "title": "Total Replacement Cost",
+          "type": "number"
+        },
+        "total_salvage": {
+          "title": "Total Salvage",
+          "type": "number"
+        },
+        "total_unmet_load": {
+          "title": "Total Unmet Load",
+          "type": "number"
+        },
+        "total_wt_generation": {
+          "title": "Total Wt Generation",
+          "type": "number"
+        }
+      },
+      "required": [
+        "kpi_contract_version",
+        "npc",
+        "lcoe",
+        "operating_cost",
+        "initial_investment",
+        "total_replacement_cost",
+        "total_om_cost",
+        "total_fuel_cost",
+        "total_salvage",
+        "total_grid_cost_net",
+        "crf",
+        "total_load_served",
+        "total_unmet_load",
+        "lpsp",
+        "renewable_fraction",
+        "total_pv_generation",
+        "total_wt_generation",
+        "total_dg_generation",
+        "total_grid_bought",
+        "total_grid_sold",
+        "annual_demand_charge_usd",
+        "annual_energy_net_usd",
+        "total_energy_dump",
+        "total_battery_charge",
+        "total_battery_discharge",
+        "annual_throughput_cycles",
+        "battery_eol_year",
+        "dg_emissions_kg",
+        "grid_emissions_kg",
+        "total_emissions_kg",
+        "lem",
+        "dg_operating_hours",
+        "dg_fuel_consumption_liters",
+        "annual_ev_charge_kwh",
+        "annual_ev_discharge_kwh",
+        "ev_v2g_revenue",
+        "monthly_grid_kwh",
+        "monthly_grid_cost",
+        "peak_demand_kw_by_month",
+        "hp_model_name",
+        "annual_hp_elec_kwh",
+        "annual_heat_produced_kwh",
+        "annual_cool_produced_kwh",
+        "mean_cop_heating",
+        "mean_cop_cooling",
+        "thermal_storage_heating_kwh_th",
+        "thermal_storage_cooling_kwh_th",
+        "annual_thermal_storage_cycles",
+        "thermal_storage_capex",
+        "annual_heating_demand_kwh_th",
+        "annual_cooling_demand_kwh_th",
+        "thermal_lpsp_heating",
+        "thermal_lpsp_cooling",
+        "annual_gas_consumption_kwh_th",
+        "annual_gas_cost_usd",
+        "annual_gas_co2_kg",
+        "gas_boiler_capex",
+        "gas_boiler_npc"
+      ],
+      "title": "KpiSummary",
+      "type": "object"
+    },
+    "SizingRow": {
+      "additionalProperties": false,
+      "description": "One row of ``sizing.csv`` (the optimiser's chosen component sizing).",
+      "properties": {
+        "capacity": {
+          "title": "Capacity",
+          "type": "number"
+        },
+        "capital_cost": {
+          "title": "Capital Cost",
+          "type": "number"
+        },
+        "component": {
+          "title": "Component",
+          "type": "string"
+        },
+        "count": {
+          "title": "Count",
+          "type": "integer"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "component",
+        "capacity",
+        "unit",
+        "count",
+        "capital_cost"
+      ],
+      "title": "SizingRow",
+      "type": "object"
+    }
+  },
+  "description": "Response body for ''GET /api/v1/jobs/{run_id}''.\n\nAttributes\n----------\nrun_id:\n    UUID4 job identifier.\nstatus:\n    Current :class:'~samba_service.jobs.JobStatus'.\nsubmitted_at:\n    UTC timestamp of job submission.\nstarted_at:\n    UTC timestamp when the solver thread picked up the job, or ''None''.\ncompleted_at:\n    UTC timestamp of job completion (success or failure), or ''None''.\nkpis:\n    Typed :class:'~samba.run_result.contracts.KpiSummary'.  Present only when\n    ''status == \"completed\"''.  Degraded to ''None'' (with a logged warning)\n    if a persisted legacy row's stored KPIs no longer match the contract.\nsizing:\n    List of typed :class:'~samba.run_result.contracts.SizingRow'.  Present\n    only when ''status == \"completed\"''; degraded as above on legacy rows.\nartifacts:\n    List of downloadable filenames available under\n    ''GET /api/v1/jobs/{run_id}/artifacts/{filename}''.\n    Populated only when ''status == \"completed\"''.\nerror:\n    Human-readable error description when ''status == \"failed\"''.",
+  "properties": {
+    "artifacts": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Artifacts",
+      "type": "array"
+    },
+    "completed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Completed At"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error"
+    },
+    "kpis": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/KpiSummary"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "sizing": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/SizingRow"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sizing"
+    },
+    "solve_time_s": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Solve Time S"
+    },
+    "started_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Started At"
+    },
+    "status": {
+      "$ref": "#/$defs/JobStatus"
+    },
+    "submitted_at": {
+      "format": "date-time",
+      "title": "Submitted At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "run_id",
+    "status",
+    "submitted_at"
+  ],
+  "title": "JobStatusResponse",
+  "type": "object"
+}

@@ -1,0 +1,22 @@
+{
+  "description": "Response body for ''POST /api/v1/validate''.\n\nAttributes\n----------\nvalid:\n    ''True'' when the scenario passes all schema checks.\nerrors:\n    List of ''\"field.path: message\"'' strings describing every validation\n    failure.  Empty when ''valid is True''.",
+  "properties": {
+    "errors": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Errors",
+      "type": "array"
+    },
+    "valid": {
+      "title": "Valid",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "valid"
+  ],
+  "title": "ValidateResponse",
+  "type": "object"
+}

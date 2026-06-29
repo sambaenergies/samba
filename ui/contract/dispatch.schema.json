@@ -1,0 +1,29 @@
+{
+  "additionalProperties": false,
+  "description": "Shape of the parsed ``dispatch.csv`` time-series the UI charts.\n\nThe dispatch frame is wide and its columns vary by scenario, so this models\nthe envelope (a timestamp index plus named numeric series) rather than a\nfixed column set. ``KNOWN_SERIES`` documents the series the UI knows how to\nlabel/colour; unknown series are still rendered generically.",
+  "properties": {
+    "series": {
+      "additionalProperties": {
+        "items": {
+          "type": "number"
+        },
+        "type": "array"
+      },
+      "title": "Series",
+      "type": "object"
+    },
+    "timestamps": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Timestamps",
+      "type": "array"
+    }
+  },
+  "required": [
+    "timestamps",
+    "series"
+  ],
+  "title": "DispatchContract",
+  "type": "object"
+}

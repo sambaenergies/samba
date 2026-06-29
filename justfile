@@ -22,6 +22,15 @@ schemas:
 openapi:
     uv run python scripts/export_openapi.py
 
+# Vendor the committed contract (schemas + openapi) into ui/contract/ for the UI build
+contract-sync:
+    uv run python scripts/sync_ui_contract.py
+
+# THE mandated regen after any contract change: schemas -> openapi -> vendor -> UI types.
+# Run this (not the individual recipes) so all drift-gated copies update atomically.
+contract: schemas openapi contract-sync
+    cd ui && npm run gen:types
+
 # Regenerate all logo derivatives (favicon, app icons, mono variants) from the source SVG
 logo:
     uv run --with pillow python scripts/gen_logo_assets.py
@@ -36,6 +45,8 @@ check:
     git diff --exit-code -- schemas
     uv run python scripts/export_openapi.py
     git diff --exit-code -- openapi.json
+    uv run python scripts/sync_ui_contract.py
+    git diff --exit-code -- ui/contract
 
 # UI checks: regenerate types from schemas (drift gate), lint, type-check, unit tests
 ui-check:

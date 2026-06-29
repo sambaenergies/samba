@@ -1,0 +1,149 @@
+{
+  "$defs": {
+    "CashflowYear": {
+      "additionalProperties": false,
+      "description": "One row of ``economics.json`` ``cashflow_annual`` (per project year).",
+      "properties": {
+        "fuel": {
+          "title": "Fuel",
+          "type": "number"
+        },
+        "grid_net": {
+          "title": "Grid Net",
+          "type": "number"
+        },
+        "investment": {
+          "title": "Investment",
+          "type": "number"
+        },
+        "om": {
+          "title": "Om",
+          "type": "number"
+        },
+        "replacement": {
+          "title": "Replacement",
+          "type": "number"
+        },
+        "salvage": {
+          "title": "Salvage",
+          "type": "number"
+        },
+        "total": {
+          "title": "Total",
+          "type": "number"
+        },
+        "year": {
+          "title": "Year",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "year",
+        "investment",
+        "om",
+        "fuel",
+        "grid_net",
+        "replacement",
+        "salvage",
+        "total"
+      ],
+      "title": "CashflowYear",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Mirrors ``economics.json`` (from :func:`samba.economics.cashflow.build_economics`).\n\nThe per-year ``cashflow_annual`` table and the top-level scalars are the\ndrift-sensitive contract the UI consumes. The cost breakdowns\n(``investment``, ``om_annual_npv``, \u2026) are backend-internal aggregates kept\nloosely typed so internal accounting changes do not needlessly break the gate.",
+  "properties": {
+    "cashflow_annual": {
+      "items": {
+        "$ref": "#/$defs/CashflowYear"
+      },
+      "title": "Cashflow Annual",
+      "type": "array"
+    },
+    "crf": {
+      "title": "Crf",
+      "type": "number"
+    },
+    "discount_rate_real": {
+      "title": "Discount Rate Real",
+      "type": "number"
+    },
+    "fuel": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Fuel",
+      "type": "object"
+    },
+    "gas": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Gas",
+      "type": "object"
+    },
+    "grid": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Grid",
+      "type": "object"
+    },
+    "investment": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Investment",
+      "type": "object"
+    },
+    "npc": {
+      "title": "Npc",
+      "type": "number"
+    },
+    "om_annual_npv": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Om Annual Npv",
+      "type": "object"
+    },
+    "project_lifetime_years": {
+      "title": "Project Lifetime Years",
+      "type": "integer"
+    },
+    "replacement_schedule": {
+      "additionalProperties": {
+        "additionalProperties": {
+          "type": "number"
+        },
+        "type": "object"
+      },
+      "title": "Replacement Schedule",
+      "type": "object"
+    },
+    "salvage": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Salvage",
+      "type": "object"
+    }
+  },
+  "required": [
+    "discount_rate_real",
+    "project_lifetime_years",
+    "crf",
+    "npc",
+    "investment",
+    "replacement_schedule",
+    "om_annual_npv",
+    "fuel",
+    "salvage",
+    "grid",
+    "gas",
+    "cashflow_annual"
+  ],
+  "title": "EconomicsReport",
+  "type": "object"
+}
