@@ -200,10 +200,11 @@ jobs:
       - name: oasdiff breaking-change detection
         id: oasdiff
         continue-on-error: true
-        uses: oasdiff/oasdiff-action/breaking@v1
+        uses: oasdiff/oasdiff-action/breaking@v0.1.4
         with:
           base: /tmp/base-openapi.json
           revision: openapi.json
+          fail-on: ERR
 
       - name: Gate on CONTRACT_VERSION major bump
         run: |
