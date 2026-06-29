@@ -85,3 +85,53 @@ jobs:
       # just ui-check: gen:types drift gate + eslint + vue-tsc + vitest
       - name: just ui-check
         run: uvx --from rust-just just ui-check
+
+  ui-external:
+    # Prove the virtual split structurally: build the UI web/contract layer from a
+    # copy of ui/ placed where NO Python source and NO repo-root schemas/ exist
+    # above it. It passes only because ui/contract/ is self-contained; a residual
+    # reach-through fails hard with nothing to reach. SCOPE: this validates the
+    # JS/web/contract layer ONLY -- ui/src-tauri (the Rust crate still embeds
+    # Command::new("samba") and a localhost CSP) is under the deferred product
+    # boundary and is intentionally NOT cargo-built in isolation here. The in-tree
+    # `ui` job above remains the same-tree drift gate (ui/contract vs backend export).
+    name: UI external-consumer build (isolation)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Fast-fail reach-through guard. The real guarantee is the isolated build
+      # below; this just gives a quick, clear error if a build input imports/aliases
+      # above ui/ (other than the in-ui ui/contract/) or references the backend.
+      - name: Reach-through guard
+        run: |
+          files=$(git ls-files 'ui/src/**' 'ui/scripts/**' 'ui/vite.config.*' 'ui/tsconfig*.json' 'ui/package.json')
+          hits=$(grep -rnE '\.\./\.\.|/schemas/|samba_service' $files | grep -vE '/generated/|\.\./\.\./contract/' || true)
+          if [ -n "$hits" ]; then
+            echo "::error::UI reach-through detected. UI build inputs must stay within ui/ (ui/contract/ is the only allowed escape). The ui-external build below is the real guarantee; this grep is fast-fail UX."
+            echo "$hits"
+            exit 1
+          fi
+          if grep -q '"\.\.", "\.\.", "schemas"' ui/scripts/gen-types.mjs; then
+            echo "::error::gen-types.mjs reaches repo-root ../../schemas; it must read ui/contract/."
+            exit 1
+          fi
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      # Copy ui/ (which contains ui/contract/) to a temp dir with no backend above it.
+      - name: Copy ui/ to an isolated directory
+        run: rsync -a --exclude node_modules --exclude dist ui/ "$RUNNER_TEMP/ui-external/"
+
+      - name: Build the UI as an external consumer
+        working-directory: ${{ runner.temp }}/ui-external
+        run: |
+          npm ci
+          npm run gen:types
+          npm run build
+          npm run test
