@@ -17,6 +17,7 @@ Exit code 0 on a successful solve, 1 otherwise.
 from __future__ import annotations
 
 import os
+import shutil
 import socket
 import subprocess
 import sys
@@ -75,12 +76,15 @@ def main() -> int:
             try:
                 r = httpx.get(f"{base}/health", timeout=2.0)
                 if r.status_code == 200:
-                    ready = True
                     health = r.json()
                     print(
                         f"[verify] health ok: solver={health.get('solver')} "
                         f"ready={health.get('solver_ready')}"
                     )
+                    if not health.get("solver_ready"):
+                        print("[verify] solver not ready in the frozen binary", file=sys.stderr)
+                        return 1
+                    ready = True
                     break
             except httpx.HTTPError:
                 pass
@@ -102,6 +106,12 @@ def main() -> int:
                 state = status["status"]
                 if state == "completed":
                     kpis = status.get("kpis") or {}
+                    # A completed-but-degraded result (KPIs coerced to None) must
+                    # not pass: the point of this check is that the freeze can
+                    # actually produce results, not merely reach "completed".
+                    if not kpis:
+                        print("[verify] completed but KPIs are empty/degraded", file=sys.stderr)
+                        return 1
                     print(
                         f"[verify] SOLVED in {time.time() - start:.1f}s "
                         f"({len(kpis)} KPIs, npc={kpis.get('npc')})"
@@ -120,6 +130,8 @@ def main() -> int:
             proc.wait(timeout=10)
         except subprocess.TimeoutExpired:
             proc.kill()
+            proc.wait()
+        shutil.rmtree(run_dir, ignore_errors=True)
 
 
 if __name__ == "__main__":
