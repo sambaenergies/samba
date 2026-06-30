@@ -169,7 +169,9 @@ jobs:
             artifacts/**/*.exe
           body: |
             **Unsigned desktop build.** macOS and Windows show a first-launch
-            warning (Gatekeeper / SmartScreen) — see the install instructions.
+            warning (Gatekeeper / SmartScreen) — see the
+            [install instructions](https://github.com/sambaenergies/samba/blob/main/docs/desktop-app.md)
+            for how to get past it and install on each OS.
 
             Platforms: Linux (`.deb` / `.rpm`), Windows (`.exe` / `.msi`),
             macOS Apple Silicon (`.dmg`). Each bundle embeds the SAMBA backend —

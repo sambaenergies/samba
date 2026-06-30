@@ -14,6 +14,7 @@ a structured directory of result artifacts.
 | Document | Description |
 |---|---|
 | [Getting Started](getting-started.md) | Install SAMBA and run your first scenario |
+| [Desktop App](desktop-app.md) | Download and run the self-contained desktop app (no Python) |
 | [Scenario Reference](scenario-reference.md) | Complete YAML schema reference |
 | [CLI Reference](cli-reference.md) | Command-line interface: `samba run`, `validate`, `info`, `serve` |
 | [API Reference](api-reference.md) | Python API for use in scripts and notebooks |
