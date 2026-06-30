@@ -1,0 +1,121 @@
+name: Build App
+
+# Per-OS build matrix for the SAMBA desktop app: freeze the backend, verify it
+# solves, then bundle the Tauri app. Manual (workflow_dispatch) for now; the
+# tag-triggered release + GitHub Release upload is a separate slice (#66).
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build app (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            bin: samba-server
+            # AppImage is excluded: its linuxdeploy step cannot resolve the
+            # ~440 MB frozen-Python payload (hundreds of bundled .so files).
+            # deb + rpm cover the major distros. See the AppImage follow-up issue.
+            bundle_args: "--bundles deb,rpm"
+          - os: macos-14
+            target: aarch64-apple-darwin
+            bin: samba-server
+            bundle_args: ""
+          - os: macos-13
+            target: x86_64-apple-darwin
+            bin: samba-server
+            bundle_args: ""
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            bin: samba-server.exe
+            bundle_args: ""
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.2.0
+        with:
+          enable-cache: true
+          python-version: "3.12"
+
+      - name: Install backend deps
+        run: uv sync --all-extras
+
+      - name: Freeze backend (PyInstaller)
+        shell: bash
+        run: |
+          uv run pyinstaller --noconfirm --clean \
+            --distpath packaging/dist --workpath packaging/build \
+            packaging/samba-server.spec
+
+      - name: Verify the frozen backend solves
+        shell: bash
+        run: uv run python scripts/verify_sidecar.py "packaging/dist/samba-server/${{ matrix.bin }}"
+
+      - name: Stage backend into Tauri resources
+        shell: bash
+        run: |
+          rm -rf ui/src-tauri/binaries/samba-server
+          mkdir -p ui/src-tauri/binaries
+          cp -R packaging/dist/samba-server ui/src-tauri/binaries/samba-server
+          # Tauri's resource copy can strip the exec bit on Unix; restore it.
+          if [ "${{ runner.os }}" != "Windows" ]; then
+            chmod +x "ui/src-tauri/binaries/samba-server/${{ matrix.bin }}"
+          fi
+
+      - name: Install Linux build deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev libgtk-3-dev \
+            libayatana-appindicator3-dev librsvg2-dev libsoup-3.0-dev
+
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ui/src-tauri
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install UI deps
+        working-directory: ui
+        run: npm ci
+
+      - name: Build the app
+        working-directory: ui
+        run: |
+          npm run gen:types
+          npx tauri build --target ${{ matrix.target }} ${{ matrix.bundle_args }}
+
+      - name: List bundle output
+        if: always()
+        shell: bash
+        run: ls -lR "ui/src-tauri/target/${{ matrix.target }}/release/bundle" || true
+
+      - name: Upload app artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: samba-app-${{ matrix.target }}
+          path: ui/src-tauri/target/${{ matrix.target }}/release/bundle/**
+          if-no-files-found: error
