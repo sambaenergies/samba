@@ -101,6 +101,11 @@ jobs:
 
       - name: Build the app
         working-directory: ui
+        env:
+          # linuxdeploy (used for the AppImage) is itself an AppImage and needs
+          # FUSE, which GitHub's ubuntu runners lack -- extract-and-run instead.
+          # Harmless on macOS/Windows.
+          APPIMAGE_EXTRACT_AND_RUN: 1
         run: |
           npm run gen:types
           npx tauri build --target ${{ matrix.target }}
