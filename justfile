@@ -67,3 +67,11 @@ goldens:
 # Regenerate the lockfile after changing dependencies
 lock:
     uv lock
+
+# Freeze the backend (samba serve) into a standalone binary for the Tauri
+# sidecar. Output: packaging/dist/samba-server/ (gitignored). Needs the
+# packaging extra: `uv sync --all-extras`.
+package-server:
+    uv run pyinstaller --noconfirm --clean \
+      --distpath packaging/dist --workpath packaging/build \
+      packaging/samba-server.spec

@@ -39,6 +39,9 @@ dependencies = [
 [project.optional-dependencies]
 cli     = ["typer>=0.9", "rich>=13.0"]
 service = ["fastapi>=0.100", "uvicorn[standard]>=0.23", "httpx>=0.24"]
+# Desktop-app packaging: freeze `samba serve` into a standalone binary for the
+# Tauri sidecar (epic: cross-platform desktop app). Not a runtime/user extra.
+packaging = ["pyinstaller>=6.0", "pyinstaller-hooks-contrib>=2024.0"]
 
 # Development tooling lives in a PEP 735 dependency group (uv-native), not a
 # user-facing extra. Install with `uv sync --all-extras` (includes this group).
