@@ -33,6 +33,8 @@ libc = "0.2"
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = [
     "Win32_Foundation",
+    "Win32_Security",            # SECURITY_ATTRIBUTES (CreateJobObjectW)
     "Win32_System_JobObjects",
+    "Win32_System_Threading",    # IO_COUNTERS (JOBOBJECT_EXTENDED_LIMIT_INFORMATION)
 ] }
 

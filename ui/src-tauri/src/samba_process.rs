@@ -118,6 +118,12 @@ impl Drop for SambaProcess {
 /// On Linux, the spawned child is configured (pre-exec) to receive SIGTERM when
 /// its parent dies. macOS has no clean equivalent and relies on the graceful
 /// cleanup above.
+///
+/// PR_SET_PDEATHSIG triggers on the death of the parent *thread*, so this is only
+/// correct while `start()` runs on a long-lived thread. It does today: it is
+/// called from `setup()` (the Tauri main thread). Don't move the spawn onto a
+/// short-lived worker (e.g. `thread::spawn`) or the backend would be killed when
+/// that worker exits.
 #[cfg(target_os = "linux")]
 fn set_parent_death_signal(cmd: &mut Command) {
     use std::os::unix::process::CommandExt;
