@@ -85,3 +85,15 @@ orphaned backend**.
   the build-matrix slice (#65); each re-runs the "does it solve?" check.
 - PyInstaller `warn-*.txt` lists attribute-level false positives (e.g.
   `pydantic.BaseModel`); the runtime solve supersedes them.
+- **Bundled resource exec bit (#65):** Tauri's `bundle.resources` copy may not
+  preserve the `+x` permission on Linux/macOS (dev uses the `SAMBA_SERVER_BIN`
+  override, so the resource path is unverified in a real bundle). The per-OS
+  matrix must confirm the bundled binary is launchable (chmod in the build if not).
+- **Crash-orphan (#65):** graceful exit cleans up the backend; a hard crash /
+  SIGKILL of the app still needs an OS death signal (Linux `PR_SET_PDEATHSIG`,
+  Windows job objects) — per-OS work.
+- **Run dir growth:** `SAMBA_RUN_DIR` artifacts under app-local-data are not
+  evicted (only in-memory job records are) — a retention/cleanup follow-up.
+- **Backend access guard:** loopback + random port + explicit CORS is the v1
+  posture; a per-launch `SAMBA_API_KEY` (the UI already carries an `apiKey`) would
+  be real defense-in-depth — hardening follow-up.

@@ -40,8 +40,9 @@ impl SambaProcess {
             // The webview's Origin differs by build/platform: the Vite dev server
             // (devUrl) in dev, and Tauri's custom protocol in a bundled app --
             // http on Linux/Windows, the tauri:// scheme on macOS. Allow exactly
-            // those (not "*"): the backend is loopback-only, but an explicit list
-            // keeps other local origins from reaching it.
+            // those, not "*". (CORS is browser-enforced and is not an access
+            // control -- any local process can still reach the loopback port; a
+            // per-launch SAMBA_API_KEY would be the real guard. Tracked for #65.)
             .env(
                 "SAMBA_CORS_ORIGINS",
                 "http://localhost:1420,http://tauri.localhost,tauri://localhost",
