@@ -43,6 +43,13 @@ Verified on **Linux x86_64, Python 3.13**:
 The solve runs the in-process `appsi_highs` (Pyomo APPSI + `highspy` wheel) — **no
 external solver binary** is bundled or required.
 
+## Constraints
+
+- **Solver: `appsi_highs` only.** The frozen binary bundles the in-process HiGHS
+  solver (`highspy`). Other Pyomo solvers (`cbc`, `glpk`, `gurobi`, ...) shell out
+  to external executables that are **not** bundled — setting `SAMBA_SOLVER` to one
+  of those will fail at runtime. The sidecar must keep `appsi_highs`.
+
 ## Known caveats / follow-ups
 
 - **Size (~439 MB)** is untrimmed onedir. Trimming (excludes, UPX, onefile) is a

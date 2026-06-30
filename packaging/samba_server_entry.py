@@ -18,6 +18,13 @@ from __future__ import annotations
 
 
 def main() -> None:
+    # Must be the first call under __main__ in a frozen binary: a no-op today
+    # (the service uses a ThreadPoolExecutor and uvicorn runs single-process),
+    # but it prevents a fork-bomb if a future build uses onefile or workers > 1.
+    import multiprocessing
+
+    multiprocessing.freeze_support()
+
     import uvicorn
 
     from samba_service.config import config
