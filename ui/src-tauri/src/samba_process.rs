@@ -21,10 +21,7 @@ impl SambaProcess {
         // The frozen `samba-server` reads all config from SAMBA_* env vars (it is
         // not the Typer CLI, so there is no `--port` flag).
         let listener = TcpListener::bind("127.0.0.1:0").map_err(|err| err.to_string())?;
-        let port = listener
-            .local_addr()
-            .map_err(|err| err.to_string())?
-            .port();
+        let port = listener.local_addr().map_err(|err| err.to_string())?.port();
         drop(listener);
 
         // The backend must write run artifacts somewhere writable; the app's
@@ -40,7 +37,15 @@ impl SambaProcess {
             .env("SAMBA_HOST", "127.0.0.1")
             .env("SAMBA_PORT", port.to_string())
             .env("SAMBA_SOLVER", "appsi_highs")
-            .env("SAMBA_CORS_ORIGINS", "http://localhost")
+            // The webview's Origin differs by build/platform: the Vite dev server
+            // (devUrl) in dev, and Tauri's custom protocol in a bundled app --
+            // http on Linux/Windows, the tauri:// scheme on macOS. Allow exactly
+            // those (not "*"): the backend is loopback-only, but an explicit list
+            // keeps other local origins from reaching it.
+            .env(
+                "SAMBA_CORS_ORIGINS",
+                "http://localhost:1420,http://tauri.localhost,tauri://localhost",
+            )
             .env("SAMBA_RUN_DIR", &run_dir)
             .env("SAMBA_DATA_DIR", &data_dir)
             .stdin(Stdio::null())
@@ -99,7 +104,9 @@ fn resolve_server_binary(app: &AppHandle) -> Result<PathBuf, String> {
         if path.is_file() {
             return Ok(path);
         }
-        return Err(format!("SAMBA_SERVER_BIN does not point at a file: {path:?}"));
+        return Err(format!(
+            "SAMBA_SERVER_BIN does not point at a file: {path:?}"
+        ));
     }
 
     let exe_name = if cfg!(windows) {
