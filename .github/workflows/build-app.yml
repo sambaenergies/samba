@@ -6,10 +6,6 @@ name: Build App
 
 on:
   workflow_dispatch: {}
-  # TEMPORARY (remove before merge): auto-run on pushes to the dev branch so the
-  # matrix can be iterated without the default-branch workflow_dispatch limit.
-  push:
-    branches: [epic2/65-build-matrix]
 
 permissions:
   contents: read
