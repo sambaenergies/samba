@@ -43,6 +43,30 @@ Verified on **Linux x86_64, Python 3.13**:
 The solve runs the in-process `appsi_highs` (Pyomo APPSI + `highspy` wheel) — **no
 external solver binary** is bundled or required.
 
+## Tauri integration (#64)
+
+The desktop app bundles the **onedir** as a Tauri resource and launches the inner
+binary as a child process (not Tauri's onefile `externalBin`/sidecar API — keeps
+the ~1.5 s cold start, no per-launch unpack).
+
+- **`bundle.resources`** in `tauri.conf.json` ships `binaries/samba-server` with
+  the app; at runtime `samba_process.rs` resolves
+  `<resource_dir>/binaries/samba-server/samba-server`.
+- **Staging:** `just stage-backend` builds the binary and copies it to
+  `ui/src-tauri/binaries/samba-server` (gitignored) so `tauri build`/`dev` can
+  bundle it. CI (#65) does this per-OS before `tauri build`.
+- **Dev override:** set `SAMBA_SERVER_BIN=<path to samba-server>` to point the app
+  at a binary directly, skipping resource resolution (Tauri does not copy bundle
+  resources in `tauri dev`).
+- **Config:** the app passes `SAMBA_PORT` (a free loopback port), `SAMBA_SOLVER`,
+  CORS, and a writable `SAMBA_RUN_DIR`/`SAMBA_DATA_DIR` under the app's local-data
+  dir, then blocks on `/health` before showing the UI. The backend is killed on
+  window close (`Destroyed` event) and on `SambaProcess` drop.
+
+Verified on Linux x86_64 (`tauri dev`): the app spawns the backend as its child,
+`/health` returns `solver_ready: true`, and a graceful window close leaves **no
+orphaned backend**.
+
 ## Constraints
 
 - **Solver: `appsi_highs` only.** The frozen binary bundles the in-process HiGHS
@@ -61,3 +85,15 @@ external solver binary** is bundled or required.
   the build-matrix slice (#65); each re-runs the "does it solve?" check.
 - PyInstaller `warn-*.txt` lists attribute-level false positives (e.g.
   `pydantic.BaseModel`); the runtime solve supersedes them.
+- **Bundled resource exec bit (#65):** Tauri's `bundle.resources` copy may not
+  preserve the `+x` permission on Linux/macOS (dev uses the `SAMBA_SERVER_BIN`
+  override, so the resource path is unverified in a real bundle). The per-OS
+  matrix must confirm the bundled binary is launchable (chmod in the build if not).
+- **Crash-orphan (#65):** graceful exit cleans up the backend; a hard crash /
+  SIGKILL of the app still needs an OS death signal (Linux `PR_SET_PDEATHSIG`,
+  Windows job objects) — per-OS work.
+- **Run dir growth:** `SAMBA_RUN_DIR` artifacts under app-local-data are not
+  evicted (only in-memory job records are) — a retention/cleanup follow-up.
+- **Backend access guard:** loopback + random port + explicit CORS is the v1
+  posture; a per-launch `SAMBA_API_KEY` (the UI already carries an `apiKey`) would
+  be real defense-in-depth — hardening follow-up.

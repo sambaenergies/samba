@@ -20,22 +20,24 @@ async function setupTauriBackend() {
 		return;
 	}
 
-	const [{ listen }, { invoke }] = await Promise.all([
-		import("@tauri-apps/api/event"),
-		import("@tauri-apps/api/core"),
-	]);
+	const { invoke } = await import("@tauri-apps/api/core");
 
 	const connection = useConnectionStore(pinia);
-	const initialUrl = await invoke<string | null>("get_backend_url");
-	if (initialUrl) {
-		connection.setBackendUrl(initialUrl);
+	// The backend starts synchronously in the Rust `setup()` hook, before this
+	// code runs, so its result is pulled (not received as an event, which would
+	// have already fired and been lost).
+	const backendUrl = await invoke<string | null>("get_backend_url");
+	if (backendUrl) {
+		connection.setBackendUrl(backendUrl);
 		await connection.checkConnection();
+	} else {
+		// Backend failed to start: surface it instead of spinning on "checking".
+		const startupError = await invoke<string | null>("get_startup_error");
+		if (startupError) {
+			console.error("SAMBA backend failed to start:", startupError);
+		}
+		connection.status = "unreachable";
 	}
-
-	await listen<string>("samba-ready", async (event) => {
-		connection.setBackendUrl(event.payload);
-		await connection.checkConnection();
-	});
 
 	window.addEventListener("beforeunload", () => {
 		void invoke("samba_shutdown");

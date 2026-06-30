@@ -75,3 +75,10 @@ package-server:
     uv run pyinstaller --noconfirm --clean \
       --distpath packaging/dist --workpath packaging/build \
       packaging/samba-server.spec
+
+# Stage the frozen backend into the Tauri resource dir so `tauri build`/`dev`
+# can bundle it (ui/src-tauri/binaries/ is gitignored; built, never committed).
+stage-backend: package-server
+    rm -rf ui/src-tauri/binaries/samba-server
+    mkdir -p ui/src-tauri/binaries
+    cp -r packaging/dist/samba-server ui/src-tauri/binaries/samba-server
