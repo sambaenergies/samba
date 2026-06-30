@@ -43,6 +43,30 @@ Verified on **Linux x86_64, Python 3.13**:
 The solve runs the in-process `appsi_highs` (Pyomo APPSI + `highspy` wheel) — **no
 external solver binary** is bundled or required.
 
+## Tauri integration (#64)
+
+The desktop app bundles the **onedir** as a Tauri resource and launches the inner
+binary as a child process (not Tauri's onefile `externalBin`/sidecar API — keeps
+the ~1.5 s cold start, no per-launch unpack).
+
+- **`bundle.resources`** in `tauri.conf.json` ships `binaries/samba-server` with
+  the app; at runtime `samba_process.rs` resolves
+  `<resource_dir>/binaries/samba-server/samba-server`.
+- **Staging:** `just stage-backend` builds the binary and copies it to
+  `ui/src-tauri/binaries/samba-server` (gitignored) so `tauri build`/`dev` can
+  bundle it. CI (#65) does this per-OS before `tauri build`.
+- **Dev override:** set `SAMBA_SERVER_BIN=<path to samba-server>` to point the app
+  at a binary directly, skipping resource resolution (Tauri does not copy bundle
+  resources in `tauri dev`).
+- **Config:** the app passes `SAMBA_PORT` (a free loopback port), `SAMBA_SOLVER`,
+  CORS, and a writable `SAMBA_RUN_DIR`/`SAMBA_DATA_DIR` under the app's local-data
+  dir, then blocks on `/health` before showing the UI. The backend is killed on
+  window close (`Destroyed` event) and on `SambaProcess` drop.
+
+Verified on Linux x86_64 (`tauri dev`): the app spawns the backend as its child,
+`/health` returns `solver_ready: true`, and a graceful window close leaves **no
+orphaned backend**.
+
 ## Constraints
 
 - **Solver: `appsi_highs` only.** The frozen binary bundles the in-process HiGHS

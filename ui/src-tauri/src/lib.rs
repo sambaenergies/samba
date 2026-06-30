@@ -26,15 +26,22 @@ fn samba_shutdown(state: State<SambaState>) {
 }
 
 fn start_samba(app: &AppHandle, state: State<SambaState>) {
-    if let Ok(process) = SambaProcess::start() {
-        let backend_url = process.backend_url();
-        if let Ok(mut backend_lock) = state.backend_url.lock() {
-            *backend_lock = Some(backend_url.clone());
+    match SambaProcess::start(app) {
+        Ok(process) => {
+            let backend_url = process.backend_url();
+            if let Ok(mut backend_lock) = state.backend_url.lock() {
+                *backend_lock = Some(backend_url.clone());
+            }
+            if let Ok(mut process_lock) = state.process.lock() {
+                *process_lock = Some(process);
+            }
+            let _ = app.emit("samba-ready", backend_url);
         }
-        if let Ok(mut process_lock) = state.process.lock() {
-            *process_lock = Some(process);
+        Err(err) => {
+            // Surface the failure so the UI can show it instead of hanging on a
+            // backend that never came up.
+            let _ = app.emit("samba-error", err);
         }
-        let _ = app.emit("samba-ready", backend_url);
     }
 }
 

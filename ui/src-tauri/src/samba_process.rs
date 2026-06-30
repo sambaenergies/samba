@@ -1,8 +1,11 @@
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
+use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
+
+use tauri::{AppHandle, Manager};
 
 pub struct SambaProcess {
     pub port: u16,
@@ -10,7 +13,13 @@ pub struct SambaProcess {
 }
 
 impl SambaProcess {
-    pub fn start() -> Result<Self, String> {
+    /// Start the bundled backend sidecar and block until it answers `/health`.
+    pub fn start(app: &AppHandle) -> Result<Self, String> {
+        let exe = resolve_server_binary(app)?;
+
+        // Pick a free loopback port and hand it to the backend via SAMBA_PORT.
+        // The frozen `samba-server` reads all config from SAMBA_* env vars (it is
+        // not the Typer CLI, so there is no `--port` flag).
         let listener = TcpListener::bind("127.0.0.1:0").map_err(|err| err.to_string())?;
         let port = listener
             .local_addr()
@@ -18,19 +27,32 @@ impl SambaProcess {
             .port();
         drop(listener);
 
-        let child = Command::new("samba")
-            .arg("serve")
-            .arg("--port")
-            .arg(port.to_string())
+        // The backend must write run artifacts somewhere writable; the app's
+        // local-data dir is the right home for a bundled desktop app.
+        let data_dir = app
+            .path()
+            .app_local_data_dir()
+            .map_err(|err| format!("no app data dir: {err}"))?;
+        let run_dir = data_dir.join("runs");
+        std::fs::create_dir_all(&run_dir).map_err(|err| err.to_string())?;
+
+        let child = Command::new(&exe)
+            .env("SAMBA_HOST", "127.0.0.1")
+            .env("SAMBA_PORT", port.to_string())
+            .env("SAMBA_SOLVER", "appsi_highs")
             .env("SAMBA_CORS_ORIGINS", "http://localhost")
+            .env("SAMBA_RUN_DIR", &run_dir)
+            .env("SAMBA_DATA_DIR", &data_dir)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .spawn()
-            .map_err(|err| format!("failed to spawn samba serve: {err}"))?;
+            .map_err(|err| format!("failed to spawn samba-server ({exe:?}): {err}"))?;
 
         let process = Self { port, child };
-        process.wait_until_ready(Duration::from_secs(15))?;
+        // The frozen binary cold-starts in ~1-2s; allow generous headroom for
+        // slower machines.
+        process.wait_until_ready(Duration::from_secs(30))?;
         Ok(process)
     }
 
@@ -52,6 +74,51 @@ impl SambaProcess {
     pub fn stop(&mut self) {
         let _ = self.child.kill();
         let _ = self.child.wait();
+    }
+}
+
+impl Drop for SambaProcess {
+    /// Safety net: kill the backend whenever the handle is dropped, covering
+    /// clean-exit paths that don't fire the window `Destroyed` event. (A hard
+    /// crash / SIGKILL of the app still needs an OS-level death signal --
+    /// tracked for the per-OS build matrix.)
+    fn drop(&mut self) {
+        self.stop();
+    }
+}
+
+/// Locate the frozen `samba-server` binary.
+///
+/// In a bundled app it lives under the Tauri resource dir
+/// (`binaries/samba-server/<exe>`, the PyInstaller onedir). For local dev/tests
+/// the `SAMBA_SERVER_BIN` env var points directly at the binary so the app can
+/// run without a full `tauri build`.
+fn resolve_server_binary(app: &AppHandle) -> Result<PathBuf, String> {
+    if let Ok(explicit) = std::env::var("SAMBA_SERVER_BIN") {
+        let path = PathBuf::from(explicit);
+        if path.is_file() {
+            return Ok(path);
+        }
+        return Err(format!("SAMBA_SERVER_BIN does not point at a file: {path:?}"));
+    }
+
+    let exe_name = if cfg!(windows) {
+        "samba-server.exe"
+    } else {
+        "samba-server"
+    };
+    let resource_dir = app
+        .path()
+        .resource_dir()
+        .map_err(|err| format!("no resource dir: {err}"))?;
+    let path = resource_dir
+        .join("binaries")
+        .join("samba-server")
+        .join(exe_name);
+    if path.is_file() {
+        Ok(path)
+    } else {
+        Err(format!("bundled samba-server not found at {path:?}"))
     }
 }
 

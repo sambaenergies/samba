@@ -37,6 +37,13 @@ async function setupTauriBackend() {
 		await connection.checkConnection();
 	});
 
+	// If the bundled backend fails to start, surface it instead of spinning on
+	// the initial "checking" state forever.
+	await listen<string>("samba-error", (event) => {
+		console.error("SAMBA backend failed to start:", event.payload);
+		connection.status = "unreachable";
+	});
+
 	window.addEventListener("beforeunload", () => {
 		void invoke("samba_shutdown");
 	});
