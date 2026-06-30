@@ -20,6 +20,7 @@ import os
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -50,15 +51,14 @@ def main() -> int:
         return 2
 
     port = _free_port()
-    run_dir = REPO_ROOT / ".verify-runs"
-    run_dir.mkdir(exist_ok=True)
+    run_dir = tempfile.mkdtemp(prefix="samba-verify-")
     env = {
         **os.environ,
         "SAMBA_HOST": "127.0.0.1",
         "SAMBA_PORT": str(port),
         "SAMBA_SOLVER": "appsi_highs",
         "SAMBA_DATA_DIR": str(DATA_DIR),
-        "SAMBA_RUN_DIR": str(run_dir),
+        "SAMBA_RUN_DIR": run_dir,
     }
     base = f"http://127.0.0.1:{port}"
 
