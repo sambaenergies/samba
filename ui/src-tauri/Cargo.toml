@@ -23,3 +23,16 @@ tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
+# Kill the bundled backend if the app dies unexpectedly (crash / SIGKILL), which
+# the graceful Destroyed/Drop path cannot cover. Linux: PR_SET_PDEATHSIG.
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = "0.2"
+
+# Windows: a Job Object with KILL_ON_JOB_CLOSE -- when the app process exits the
+# OS closes its job handle, taking the backend with it.
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = [
+    "Win32_Foundation",
+    "Win32_System_JobObjects",
+] }
+

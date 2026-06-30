@@ -10,6 +10,9 @@ use tauri::{AppHandle, Manager};
 pub struct SambaProcess {
     pub port: u16,
     child: Child,
+    // Kept for its lifetime: on Windows it holds the Job Object handle whose
+    // closure (on app exit, incl. crash) kills the backend. Unit elsewhere.
+    _death_guard: DeathGuard,
 }
 
 impl SambaProcess {
@@ -33,8 +36,8 @@ impl SambaProcess {
         let run_dir = data_dir.join("runs");
         std::fs::create_dir_all(&run_dir).map_err(|err| err.to_string())?;
 
-        let child = Command::new(&exe)
-            .env("SAMBA_HOST", "127.0.0.1")
+        let mut cmd = Command::new(&exe);
+        cmd.env("SAMBA_HOST", "127.0.0.1")
             .env("SAMBA_PORT", port.to_string())
             .env("SAMBA_SOLVER", "appsi_highs")
             // The webview's Origin differs by build/platform: the Vite dev server
@@ -51,11 +54,25 @@ impl SambaProcess {
             .env("SAMBA_DATA_DIR", &data_dir)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
-            .stderr(Stdio::null())
+            .stderr(Stdio::null());
+
+        // Linux: ask the kernel to SIGTERM the child if this process dies.
+        set_parent_death_signal(&mut cmd);
+
+        let child = cmd
             .spawn()
             .map_err(|err| format!("failed to spawn samba-server ({exe:?}): {err}"))?;
 
-        let process = Self { port, child };
+        // Windows: bind the child to a Job Object that the OS tears down (killing
+        // the child) when this process exits. The guard is unit on other targets.
+        #[allow(clippy::let_unit_value)]
+        let death_guard = arm_death_guard(&child);
+
+        let process = Self {
+            port,
+            child,
+            _death_guard: death_guard,
+        };
         // The frozen binary cold-starts in ~1-2s; allow generous headroom for
         // slower machines.
         process.wait_until_ready(Duration::from_secs(30))?;
@@ -84,12 +101,108 @@ impl SambaProcess {
 }
 
 impl Drop for SambaProcess {
-    /// Safety net: kill the backend whenever the handle is dropped, covering
-    /// clean-exit paths that don't fire the window `Destroyed` event. (A hard
-    /// crash / SIGKILL of the app still needs an OS-level death signal --
-    /// tracked for the per-OS build matrix.)
+    /// Safety net for clean-exit paths that don't fire the window `Destroyed`
+    /// event. A hard crash / SIGKILL of the app skips Drop entirely; that case is
+    /// covered by the OS-level death signals armed at spawn (see
+    /// `set_parent_death_signal` / `arm_death_guard`).
     fn drop(&mut self) {
         self.stop();
+    }
+}
+
+// --- Parent-death cleanup ---------------------------------------------------
+//
+// The graceful path (Destroyed event, then Drop) handles a normal quit. These
+// arm OS-level fallbacks so a *crash* of the app also takes the backend down.
+
+/// On Linux, the spawned child is configured (pre-exec) to receive SIGTERM when
+/// its parent dies. macOS has no clean equivalent and relies on the graceful
+/// cleanup above.
+#[cfg(target_os = "linux")]
+fn set_parent_death_signal(cmd: &mut Command) {
+    use std::os::unix::process::CommandExt;
+    // SAFETY: the closure runs in the forked child before exec and only calls
+    // prctl(2), which is async-signal-safe.
+    unsafe {
+        cmd.pre_exec(|| {
+            if libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGTERM) == -1 {
+                return Err(std::io::Error::last_os_error());
+            }
+            Ok(())
+        });
+    }
+}
+
+#[cfg(not(target_os = "linux"))]
+fn set_parent_death_signal(_cmd: &mut Command) {}
+
+#[cfg(windows)]
+type DeathGuard = Option<windows_job::JobGuard>;
+#[cfg(not(windows))]
+type DeathGuard = ();
+
+/// On Windows, assign the child to a Job Object with KILL_ON_JOB_CLOSE so the OS
+/// kills it when this process (and thus its job handle) goes away. Returns a
+/// guard that owns the job handle for the backend's lifetime.
+#[cfg(windows)]
+fn arm_death_guard(child: &Child) -> DeathGuard {
+    windows_job::arm(child)
+}
+
+#[cfg(not(windows))]
+fn arm_death_guard(_child: &Child) -> DeathGuard {}
+
+#[cfg(windows)]
+mod windows_job {
+    use std::os::windows::io::AsRawHandle;
+    use std::process::Child;
+
+    use windows_sys::Win32::Foundation::{CloseHandle, HANDLE};
+    use windows_sys::Win32::System::JobObjects::{
+        AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
+        SetInformationJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
+        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+    };
+
+    /// Owns a Job Object handle. Dropping (or the process exiting) closes the
+    /// handle, which triggers KILL_ON_JOB_CLOSE on the assigned child.
+    pub struct JobGuard(HANDLE);
+
+    // The handle is only ever closed in Drop; safe to move across threads.
+    unsafe impl Send for JobGuard {}
+
+    impl Drop for JobGuard {
+        fn drop(&mut self) {
+            unsafe {
+                CloseHandle(self.0);
+            }
+        }
+    }
+
+    pub fn arm(child: &Child) -> Option<JobGuard> {
+        unsafe {
+            let job = CreateJobObjectW(std::ptr::null(), std::ptr::null());
+            if job.is_null() {
+                return None;
+            }
+            let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = std::mem::zeroed();
+            info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+            let set = SetInformationJobObject(
+                job,
+                JobObjectExtendedLimitInformation,
+                &info as *const _ as *const _,
+                std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
+            );
+            if set == 0 {
+                CloseHandle(job);
+                return None;
+            }
+            if AssignProcessToJobObject(job, child.as_raw_handle() as HANDLE) == 0 {
+                CloseHandle(job);
+                return None;
+            }
+            Some(JobGuard(job))
+        }
     }
 }
 
