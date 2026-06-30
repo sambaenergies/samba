@@ -1,11 +1,15 @@
 name: Build App
 
 # Per-OS build matrix for the SAMBA desktop app: freeze the backend, verify it
-# solves, then bundle the Tauri app. Manual (workflow_dispatch) for now; the
-# tag-triggered release + GitHub Release upload is a separate slice (#66).
+# solves, then bundle the Tauri app. Runs manually (workflow_dispatch) for
+# iteration, and on a `ui-vX.Y.Z` tag to cut a draft GitHub release with the
+# bundles attached. (The samba-core PyPI release uses `vX.Y.Z` tags -- distinct.)
 
 on:
   workflow_dispatch: {}
+  push:
+    tags:
+      - "ui-v*.*.*"
 
 permissions:
   contents: read
@@ -30,10 +34,11 @@ jobs:
             target: aarch64-apple-darwin
             bin: samba-server
             bundle_args: ""
-          - os: macos-13
-            target: x86_64-apple-darwin
-            bin: samba-server
-            bundle_args: ""
+          # macOS x86_64 (Intel) is intentionally dropped: GitHub's `macos-13`
+          # runners are chronically unavailable (queued >1h, never scheduled),
+          # and a stuck cell would block the release via `needs: build`. Apple
+          # Silicon covers current Macs. Re-add a `macos-13` cell (or a
+          # self-hosted Intel runner) here if availability returns.
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             bin: samba-server.exe
@@ -41,6 +46,21 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+
+      - name: Check tag matches app version
+        # On a ui-v* tag, fail fast (before the expensive freeze/build) if the
+        # tag version doesn't match tauri.conf.json -- otherwise the release
+        # title says one version while the bundle filenames say another.
+        if: startsWith(github.ref, 'refs/tags/ui-v')
+        shell: bash
+        run: |
+          tag_version="${GITHUB_REF_NAME#ui-v}"
+          conf_version=$(jq -r .version ui/src-tauri/tauri.conf.json)
+          if [ "$tag_version" != "$conf_version" ]; then
+            echo "::error::tag $GITHUB_REF_NAME ($tag_version) != tauri.conf.json version ($conf_version); bump tauri.conf.json"
+            exit 1
+          fi
+          echo "tag matches app version: $conf_version"
 
       - name: Install uv
         uses: astral-sh/setup-uv@v8.2.0
@@ -119,3 +139,39 @@ jobs:
           name: samba-app-${{ matrix.target }}
           path: ui/src-tauri/target/${{ matrix.target }}/release/bundle/**
           if-no-files-found: error
+
+  release:
+    name: Draft release
+    # Only on a ui-v* tag (not on workflow_dispatch). Requires every build cell
+    # to succeed -- don't cut a release missing a platform.
+    if: startsWith(github.ref, 'refs/tags/ui-v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the release + upload assets
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+
+      - name: Create draft release
+        uses: softprops/action-gh-release@v3
+        with:
+          draft: true # left as a draft for a human to review + publish
+          name: SAMBA Desktop ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            artifacts/**/*.deb
+            artifacts/**/*.rpm
+            artifacts/**/*.dmg
+            artifacts/**/*.msi
+            artifacts/**/*.exe
+          body: |
+            **Unsigned desktop build.** macOS and Windows show a first-launch
+            warning (Gatekeeper / SmartScreen) — see the install instructions.
+
+            Platforms: Linux (`.deb` / `.rpm`), Windows (`.exe` / `.msi`),
+            macOS Apple Silicon (`.dmg`). Each bundle embeds the SAMBA backend —
+            no Python install required. (Intel macOS is not built; see the repo's
+            build-app workflow notes.)
