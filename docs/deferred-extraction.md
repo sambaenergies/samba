@@ -77,6 +77,24 @@ channel are required for real public desktop distribution.
 `tauri.conf.json` pins `connect-src` to `http://127.0.0.1:*`. A remote/hosted
 backend would require relaxing it (and re-evaluating the security posture).
 
+### `glib < 0.20` advisory — upstream-gated, not remediable in isolation
+
+Dependabot flags a medium-severity unsoundness in `glib`'s `VariantStrIter`
+`Iterator`/`DoubleEndedIterator` impls (advisory range `>= 0.15.0, < 0.20.0`,
+patched in `0.20.0`), pulled transitively into `ui/src-tauri/Cargo.lock`.
+
+It **cannot** be fixed with a targeted `cargo update -p glib`: `glib 0.18.5` is
+pinned by the gtk-rs **0.18** stack (`atk`/`gdk`/`gio`/`gtk 0.18`) that Tauri
+`2.11.x` depends on, and `gtk v0.18.2` requires `glib = "^0.18"`, so cargo
+rejects `0.20.0`. There is no `0.18.x` backport. Reaching `glib >= 0.20` means
+moving the whole gtk-rs stack to the `0.20` series, which is gated on Tauri
+bumping off gtk `0.18` — it will resolve naturally when a future Tauri release
+does so and Renovate updates the lock.
+
+*Risk today:* effectively nil — the Tauri crate is not built in CI and ships in
+no current artifact (the shipped surface is `samba-core` on PyPI + the web UI).
+Tracked here rather than dismissed so it stays visible until the stack moves.
+
 ## Deferred — UI as a separately-delivered product
 
 `samba-ui` package name, independent UI versioning, and its own release tag
