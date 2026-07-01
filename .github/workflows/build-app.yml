@@ -177,6 +177,5 @@ jobs:
             for how to get past it and install on each OS.
 
             Platforms: Linux (`.deb` / `.rpm`), Windows (`.exe` / `.msi`),
-            macOS Apple Silicon (`.dmg`). Each bundle embeds the SAMBA backend —
-            no Python install required. (Intel macOS is not built; see the repo's
-            build-app workflow notes.)
+            macOS Apple Silicon and Intel (`.dmg`). Each bundle embeds the SAMBA
+            backend — no Python install required.
