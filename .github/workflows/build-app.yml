@@ -34,11 +34,14 @@ jobs:
             target: aarch64-apple-darwin
             bin: samba-server
             bundle_args: ""
-          # macOS x86_64 (Intel) is intentionally dropped: GitHub's `macos-13`
-          # runners are chronically unavailable (queued >1h, never scheduled),
-          # and a stuck cell would block the release via `needs: build`. Apple
-          # Silicon covers current Macs. Re-add a `macos-13` cell (or a
-          # self-hosted Intel runner) here if availability returns.
+          # macOS x86_64 (Intel). Uses `macos-15-intel`: the earlier `macos-13`
+          # label was retired on 2025-12-04 (GitHub N-1 OS policy), so jobs
+          # targeting it queued forever. `macos-15-intel` is the current standard
+          # Intel runner (GitHub supports Intel macOS until ~Fall 2027).
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+            bin: samba-server
+            bundle_args: ""
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             bin: samba-server.exe
