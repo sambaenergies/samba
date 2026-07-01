@@ -10,7 +10,29 @@ are listed for history without comparison links.
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added
+
+- **Cross-platform desktop app** — a self-contained SAMBA you download and run,
+  no Python required. A [Tauri](https://tauri.app) shell bundles the backend
+  (PyInstaller-frozen, in-process HiGHS solver) and manages its lifecycle,
+  including cleanup if the app crashes. Released independently as `ui-vX.Y.Z`
+  tags; the build matrix produces installers for Linux (`.deb` / `.rpm`), Windows
+  (`.exe` / `.msi`), and macOS Apple Silicon (`.dmg`), each with the backend
+  embedded. First release: `ui-v0.1.0`. See
+  [docs/desktop-app.md](docs/desktop-app.md).
+
+### Notes
+
+- Desktop builds are **unsigned** (no code-signing certificates yet); macOS and
+  Windows show a one-time first-launch warning.
+- **No Linux AppImage** was shipped: Tauri's `linuxdeploy` bundler cannot resolve
+  the ~440 MB frozen-Python payload (hundreds of `.so` files in PyInstaller's
+  `_internal/`), and neither `APPIMAGE_EXTRACT_AND_RUN` nor `libfuse2t64` fixed it.
+  `.deb` + `.rpm` cover the major distros. If it is ever needed, revisit by
+  bundling with `appimagetool` directly or excluding the payload from
+  `linuxdeploy`'s dependency scan.
+- **macOS Intel is not built** — GitHub's `macos-13` runners are chronically
+  unavailable; Apple Silicon only for now.
 
 ## [5.3.1] - 2026-06-28
 
