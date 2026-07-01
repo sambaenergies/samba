@@ -23,9 +23,10 @@ Grab the installer for your platform from the
 | **Linux** (Fedora/RHEL/openSUSE) | `SAMBA-X.Y.Z-1.x86_64.rpm` |
 | **Windows** (x64) | `SAMBA_X.Y.Z_x64-setup.exe` (or the `.msi`) |
 | **macOS** (Apple Silicon) | `SAMBA_X.Y.Z_aarch64.dmg` |
+| **macOS** (Intel) | `SAMBA_X.Y.Z_x64.dmg` |
 
-> **macOS:** only Apple Silicon (M1/M2/M3…) builds are published. Intel Macs are
-> not currently built (CI runner availability) — run from source if you need Intel.
+> **macOS:** pick the `.dmg` for your chip — `aarch64` for Apple Silicon
+> (M1/M2/M3…), `x64` for Intel.
 
 ## Install & first launch
 
