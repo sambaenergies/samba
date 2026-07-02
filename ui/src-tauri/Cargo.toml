@@ -31,7 +31,7 @@ libc = "0.2"
 # Windows: a Job Object with KILL_ON_JOB_CLOSE -- when the app process exits the
 # OS closes its job handle, taking the backend with it.
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.59", features = [
+windows-sys = { version = "0.61", features = [
     "Win32_Foundation",
     "Win32_Security",            # SECURITY_ATTRIBUTES (CreateJobObjectW)
     "Win32_System_JobObjects",
