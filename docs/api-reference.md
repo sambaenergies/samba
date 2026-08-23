@@ -186,5 +186,6 @@ ValueError
 
 ```python
 import samba
+
 print(samba.__version__)  # "1.0.0"
 ```
