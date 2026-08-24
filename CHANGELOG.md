@@ -10,16 +10,111 @@ are listed for history without comparison links.
 
 ## [Unreleased]
 
+## [6.0.0] - 2026-08-24
+
+Contract release. The HTTP surface, its error envelope, and the published
+OpenAPI + JSON Schema bundle become a versioned, drift-gated contract that
+consumers can generate types from — and SAMBA ships as a cross-platform
+desktop app for the first time.
+
+### Breaking
+
+Scoped to the **HTTP service** — but the service is part of what
+`samba-core` publishes (`samba serve`, the committed `openapi.json`, and the
+`api_version` that `/health` advertises for clients to branch on), so an
+incompatible change to it is a major version under
+[SemVer](https://semver.org/spec/v2.0.0.html) §8. A consumer pinning
+`samba-core>=5.3,<6` must not receive these changes inside their declared-safe
+range.
+
+The Python API is unchanged: no module, signature, or `__all__` change in
+`samba` or `samba_cli`, and `requires-python` is untouched. Library-only users
+can upgrade without code changes.
+
+- **`422` response bodies changed shape on every route.** FastAPI's default
+  `{"detail": [{...}, ...]}` is normalised into the shared envelope
+  `{"detail": "<message>", "errors": ["<line>", ...] | null}`. The `detail`
+  property changed from an **array of objects to a string**; the per-error
+  detail moved to `errors[]`. A client that iterated `detail` must read
+  `errors` instead. The `HTTPValidationError` and `ValidationError` schemas are
+  gone from `components/schemas`.
+- **Every `operation_id` was renamed** from FastAPI's generated form to an
+  explicit stable name — `list_jobs_api_v1_jobs_get` → `listJobs`,
+  `submit_api_v1_jobs_post` → `submitJob`, `get_job_api_v1_jobs__run_id__get` →
+  `getJob`, `delete_job_api_v1_jobs__run_id__delete` → `deleteJob`,
+  `get_artifact_api_v1_jobs__run_id__artifacts__filename__get` → `getArtifact`,
+  `validate_api_v1_validate_post` → `validateScenario`, `health_health_get` →
+  `getHealth`. Generated clients will see every method renamed and must be
+  regenerated.
+
+Route paths, methods, and success-response shapes are unchanged.
+
+**Why `API_VERSION` is `1.0.0` and not `2.0.0`.** The package major moves
+because the surface shipped in 5.3.1 changed incompatibly. `API_VERSION` is a
+*new* axis, introduced in this release and never previously published — 5.3.1
+carried a hardcoded, unrelated `info.version` and declared no API version at
+all. `1.0.0` is therefore its initial declaration, chosen so its major matches
+the `/api/v1` routing namespace, and the `/api/vN` namespace does **not** move.
+Incompatible HTTP changes from here on will bump `API_VERSION`, and a major
+there will move the namespace with it.
+
 ### Added
 
+- **Versioned service contract** (`samba_service/_contract.py`) — a single
+  source of truth for three independent version axes: the `samba-core` package
+  version, `API_VERSION` (SemVer of the HTTP surface, and the FastAPI
+  `info.version`), and `CONTRACT_VERSION` (the published OpenAPI + schema
+  bundle). The `/api/vN` namespace-versus-`info.version` rule is documented
+  there rather than re-decided per change.
+- **`/health` now advertises compatibility** — `api_version`,
+  `contract_version`, and `capabilities` join the response. Clients should key
+  compatibility off `api_version`, never off the display-only `version`.
+- **Typed error envelope on every route.** `ErrorResponse` is documented for
+  every error status the service can return, so `openapi.json` describes error
+  bodies instead of leaving them untyped.
+- **Committed, deterministic `openapi.json`** at the repo root, exported by
+  `just openapi` with alphabetically sorted keys for byte-stable output, and
+  gated against drift in CI.
+- **`error.schema.json` and `job_submit.schema.json`** join the published
+  `schemas/` set, completing the request/response envelope coverage.
+- **Vendored contract for the UI** (`ui/contract/`) — the UI generates its
+  TypeScript from a self-contained copy rather than reaching up to the repo
+  root, proving the web layer can be built as an external consumer.
 - **Cross-platform desktop app** — a self-contained SAMBA you download and run,
   no Python required. A [Tauri](https://tauri.app) shell bundles the backend
   (PyInstaller-frozen, in-process HiGHS solver) and manages its lifecycle,
   including cleanup if the app crashes. Released independently as `ui-vX.Y.Z`
-  tags; the build matrix produces installers for Linux (`.deb` / `.rpm`), Windows
-  (`.exe` / `.msi`), and macOS — both Apple Silicon and Intel (`.dmg`), each with
-  the backend embedded. First release: `ui-v0.1.0`. See
+  tags; the build matrix produces installers for Linux (`.deb` / `.rpm`),
+  Windows (`.exe` / `.msi`), and macOS — both Apple Silicon and Intel (`.dmg`),
+  each with the backend embedded. First release: `ui-v0.1.0`. See
   [docs/desktop-app.md](docs/desktop-app.md).
+
+### Changed
+
+- **Job results are typed.** `JobStatusResponse.kpis` is now
+  `KpiSummary | None` and `.sizing` is `list[SizingRow] | None` (both were
+  `dict[str, Any]`), so the published job schema is meaningful and the UI gets
+  typed results. Stored rows that no longer validate — a legacy row written
+  before a contract change — degrade to `null` with a warning rather than
+  failing the whole listing.
+- **`OpenAPI info.version` realigned from `2.0.0` to `1.0.0`.** The old value
+  was a hardcoded literal inconsistent with the `/api/v1` routing namespace.
+  `API_VERSION` now drives it and its major matches the namespace by rule. The
+  published number therefore *decreases* at this release; it is a one-time
+  correction, not a rollback of functionality.
+- **UI uses a route-aware typed client**, replacing the hand-cast job response.
+- **CI** gained a contract breaking-change check (oasdiff), a baseline-UI
+  compatibility gate, an external-consumer build with a reach-through guard,
+  `samba_service` in the mypy gate, and docs-only path filtering behind a
+  single always-reporting `CI gate` aggregator.
+- **Dependencies** swept across every ecosystem — Python, npm, Cargo, and
+  GitHub Actions — clearing all 15 then-open Dependabot advisories that had a
+  reachable fix.
+
+### Fixed
+
+- `ev_presence` return types stay concrete under numpy 2.5.
+- Intel macOS desktop builds use the correct runner.
 
 ### Notes
 
@@ -31,6 +126,10 @@ are listed for history without comparison links.
   `libfuse2t64` did not help. `.deb` + `.rpm` cover the major distros. If it is
   ever needed, first capture linuxdeploy's real error, then consider
   `appimagetool` directly.
+- One Dependabot advisory remains open: `glib < 0.20` in the desktop crate's
+  `Cargo.lock`, pinned by the gtk-rs 0.18 stack under Tauri 2.11.x and not
+  remediable in isolation. See
+  [docs/deferred-extraction.md](docs/deferred-extraction.md).
 
 ## [5.3.1] - 2026-06-28
 
@@ -404,5 +503,6 @@ all v1/v2 scenarios remain valid.
 - Electrical loads only; thermal and EV deferred to v2/v3.
 - DG binary on/off constraints require MILP (v2); v1 uses LP relaxation.
 
-[Unreleased]: https://github.com/sambaenergies/samba/compare/v5.3.1...HEAD
+[Unreleased]: https://github.com/sambaenergies/samba/compare/v6.0.0...HEAD
+[6.0.0]: https://github.com/sambaenergies/samba/compare/v5.3.1...v6.0.0
 [5.3.1]: https://github.com/sambaenergies/samba/releases/tag/v5.3.1

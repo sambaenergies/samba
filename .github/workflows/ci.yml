@@ -189,9 +189,9 @@ jobs:
     # Generate types for the BASELINE UI (the base branch's ui/) from THIS PR's
     # vendored contract and typecheck it: a vue-tsc error means the PR's backend
     # shape change broke the baseline UI. Baseline = base branch ui/ (the current
-    # committed UI). NOTE: once a UI release is tagged with the ui/contract/ setup,
-    # prefer that tag as a stricter baseline -- v5.3.1 predates ui/contract/ so it
-    # is not usable here yet. PR-only (needs a base ref).
+    # committed UI). NOTE: `ui-v0.1.0` now carries ui/contract/ and so would serve as
+    # a stricter, release-pinned baseline than the moving base branch; switching to it
+    # is deliberate future work, not yet done. PR-only (needs a base ref).
     name: UI compatibility (baseline UI vs PR contract)
     needs: changes
     runs-on: ubuntu-latest

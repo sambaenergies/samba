@@ -91,9 +91,13 @@ moving the whole gtk-rs stack to the `0.20` series, which is gated on Tauri
 bumping off gtk `0.18` — it will resolve naturally when a future Tauri release
 does so and Renovate updates the lock.
 
-*Risk today:* effectively nil — the Tauri crate is not built in CI and ships in
-no current artifact (the shipped surface is `samba-core` on PyPI + the web UI).
-Tracked here rather than dismissed so it stays visible until the stack moves.
+*Risk today:* the Tauri crate is still not built in CI, but it **does** now ship —
+the `ui-v0.1.0` desktop release publishes Linux `.deb` / `.rpm` installers, and
+`glib` arrives via the GTK backend those use. The earlier assessment here predated
+that release and claimed the crate shipped in no artifact; that is no longer true.
+The advisory is an unsoundness in `VariantStrIter`'s iterator impls, so whether
+this code ever constructs one governs the real exposure. Tracked rather than
+dismissed so it stays visible until the stack moves.
 
 ## Deferred — UI as a separately-delivered product
 
