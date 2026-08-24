@@ -3,6 +3,8 @@ message: "If you use SAMBA in academic work, please cite it as below. See docs/a
 title: "SAMBA — Systems Advisor for Microgrids & Building Analysis"
 abstract: "An open-source (MPL-2.0) Python tool for optimal sizing and techno-economic analysis of hybrid microgrids via LP/MILP optimisation."
 type: software
+version: "6.0.0"
+date-released: "2026-08-24"
 authors:
   - family-names: Brooks
     given-names: Cameron
