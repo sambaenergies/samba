@@ -1,4 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>sambaenergies/renovate-config"]
+  "extends": ["github>sambaenergies/renovate-config"],
+  "packageRules": [
+    {
+      "description": "openapi-typescript reaches into the TypeScript compiler API (ts.factory), which the TS 7 Go port does not expose, so `npm run gen:types` crashes at module load. openapi-typescript's latest (7.13.0) still declares peerDependencies.typescript ^5.x and no 8.x exists. Lift this cap once openapi-typescript ships TS 7 support; tracked in #93.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7"
+    }
+  ]
 }
