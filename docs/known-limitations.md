@@ -93,4 +93,4 @@ per-version history.
 | Limitation | Detail |
 |---|---|
 | REST job store | `samba_service` exposes async job endpoints. The job store is in-process by default (records lost on restart); set `SAMBA_PERSIST_JOBS` for a SQLite-backed store that survives restarts. See [`deployment.md`](deployment.md). |
-| UI packaging | The `ui/` directory is a working Vue 3 + Tauri front-end (web + desktop dev modes), driven by types generated from the backend schema. Native installers that bundle the backend (no Python required) are not yet shipped. |
+| UI packaging | The `ui/` directory is a working Vue 3 + Tauri front-end (web + desktop dev modes), driven by types generated from the backend schema. Native installers bundling the backend ship as `ui-vX.Y.Z` releases (`.deb` / `.rpm` / `.exe` / `.msi` / `.dmg`); they are **unsigned**, and no Linux AppImage is published. See [`desktop-app.md`](desktop-app.md). |
