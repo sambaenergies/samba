@@ -67,8 +67,10 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v10.0.1
+        # No `enable-cache`: setup-uv v10's `auto` default disables caching for
+        # tag/release events so a cache written by a less-trusted context cannot
+        # influence a published artifact. Do not re-add it here.
         with:
-          enable-cache: true
           python-version: "3.12"
 
       - name: Install backend deps
