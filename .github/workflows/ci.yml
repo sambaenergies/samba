@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       code: ${{ steps.detect.outputs.code }}
+      rust: ${{ steps.detect.outputs.rust }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -30,6 +31,7 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" != "pull_request" ]; then
             echo "code=true" >> "$GITHUB_OUTPUT"
+            echo "rust=true" >> "$GITHUB_OUTPUT"
             echo "Non-PR event (${{ github.event_name }}): running the full gate."
             exit 0
           fi
@@ -38,6 +40,7 @@ jobs:
           echo "Changed files:"; echo "$changed"
           if [ -z "$changed" ]; then
             echo "code=true" >> "$GITHUB_OUTPUT"
+            echo "rust=true" >> "$GITHUB_OUTPUT"
             echo "Empty diff -- running the full gate (fail-safe)."
             exit 0
           fi
@@ -49,6 +52,17 @@ jobs:
           else
             echo "code=false" >> "$GITHUB_OUTPUT"
             echo "Docs-only change: heavy jobs will skip; ci-gate still reports."
+          fi
+          # The Rust gate is narrower than `code`: compiling the Tauri crate is
+          # slow, and only ui/src-tauri/** can affect it -- plus this workflow
+          # itself, since the job's own definition is part of its input set (and
+          # that makes a change to the gate exercise the gate).
+          if echo "$changed" | grep -qE '^ui/src-tauri/|^\.github/workflows/ci\.yml$'; then
+            echo "rust=true" >> "$GITHUB_OUTPUT"
+            echo "Tauri crate or this workflow touched: running the Rust gate."
+          else
+            echo "rust=false" >> "$GITHUB_OUTPUT"
+            echo "Nothing that affects the Tauri crate: Rust gate skips."
           fi
 
   check:
@@ -271,6 +285,60 @@ jobs:
           echo "::error::Breaking openapi.json change without a CONTRACT_VERSION major bump. Either keep the change backward-compatible or bump CONTRACT_VERSION major in samba_service/_contract.py."
           exit 1
 
+  rust:
+    # PR-time compile gate for the Tauri crate. Nothing else in this workflow
+    # builds Rust, so before this a Cargo change could merge with every check
+    # green and first compile at `ui-v*` tag time. Both hosts are built because
+    # the crate carries `#[cfg(windows)]` code (samba_process.rs's job-object
+    # module) that a Linux-only check never compiles -- and vice versa.
+    name: Rust (cargo check, ${{ matrix.label }})
+    needs: changes
+    if: needs.changes.outputs.rust == 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: linux
+          - os: windows-latest
+            label: windows
+    steps:
+      - uses: actions/checkout@v7
+
+      # Tauri v2 prerequisites (docs: start/prerequisites). Windows needs none:
+      # WebView2 ships with the runner image.
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file \
+            libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+
+      - name: Stub the PyInstaller sidecar
+        # tauri.conf.json lists `binaries/samba-server` under bundle.resources.
+        # It is produced by build-app.yml's PyInstaller step, so it is absent
+        # from a plain checkout and tauri-build fails config validation without
+        # it ("resource path `binaries/samba-server` doesn't exist"). cargo
+        # check never bundles, so a placeholder is sufficient. /binaries/ is
+        # gitignored, so this cannot be committed by accident.
+        shell: bash
+        run: |
+          mkdir -p ui/src-tauri/binaries
+          printf '#!/bin/sh\nexit 0\n' > ui/src-tauri/binaries/samba-server
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1.17.0
+        with:
+          toolchain: stable
+          cache-workspaces: ui/src-tauri
+
+      # No frontend build: tauri-build does not require `frontendDist` to exist
+      # for `cargo check`, only for a real bundle.
+      - name: cargo check
+        working-directory: ui/src-tauri
+        run: cargo check --locked --all-targets
+
   ci-gate:
     # The single required status check. It ALWAYS runs (no path gate) so it always
     # reports, and it passes only when every upstream job either succeeded or was
@@ -281,7 +349,7 @@ jobs:
     name: CI gate
     runs-on: ubuntu-latest
     if: always()
-    needs: [changes, check, test, ui, ui-external, compat-ui, contract-breaking]
+    needs: [changes, check, test, ui, ui-external, compat-ui, contract-breaking, rust]
     steps:
       - name: Require all upstream jobs to succeed or skip
         run: |
@@ -300,6 +368,7 @@ jobs:
           check_result ui-external      '${{ needs.ui-external.result }}'
           check_result compat-ui        '${{ needs.compat-ui.result }}'
           check_result contract-breaking '${{ needs.contract-breaking.result }}'
+          check_result rust             '${{ needs.rust.result }}'
           if [ "$fail" -ne 0 ]; then
             echo "CI gate: FAILED"
             exit 1
