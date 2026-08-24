@@ -99,4 +99,3 @@ export interface MonthlyRow {
   grid_export_kwh: number;
   unmet_kwh: number;
 }
-
