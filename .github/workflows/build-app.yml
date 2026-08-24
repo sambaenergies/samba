@@ -66,7 +66,7 @@ jobs:
           echo "tag matches app version: $conf_version"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v8.2.0
+        uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
           python-version: "3.12"
@@ -115,7 +115,7 @@ jobs:
           workspaces: ui/src-tauri
 
       - name: Install Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "24"
           cache: npm
