@@ -95,6 +95,25 @@ Three independent versions, defined authoritatively in
 | **Contract version** (`CONTRACT_VERSION`, e.g. `1.0`) | `_contract.py` | the published contract bundle (openapi + schemas) changes in a way consumers must track |
 | OpenAPI spec (`3.1.0`) | owned by FastAPI | — (not configured here) |
 
+### Where the release version lives
+
+`samba/_version.py` is the **only** place to edit it. `pyproject.toml` derives it
+(`dynamic = ["version"]` + `[tool.hatch.version]`), so packaging can never drift.
+
+Two files are static and cannot derive it, so they are **gated instead of
+hand-audited** by `tests/unit/test_version_consistency.py`:
+
+- `CITATION.cff` — `version` and `date-released`
+- `CHANGELOG.md` — the most recent release heading
+
+Bump `samba/_version.py`, run `just test`, and the gate names anything else that
+needs updating. Don't keep a manual list of version locations — add a case to
+that test instead, so a missed spot fails CI rather than shipping stale.
+
+> Editable installs cache bytecode by `(mtime, size)`. Two version strings of
+> equal length written in the same second can leave a stale `.pyc`; if a version
+> change seems not to take effect, clear `__pycache__`.
+
 ## Branch protection & CI gates
 
 `main` requires a **single** status check (GitHub repo setting, not in-repo)
