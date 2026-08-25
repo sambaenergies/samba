@@ -4,7 +4,7 @@ A SAMBA scenario is a YAML file that completely describes an energy system
 optimisation problem. SAMBA validates, solves, and post-processes the scenario to
 produce result artifacts.
 
-See [`examples/base_scenario.yaml`](../examples/base_scenario.yaml) for a fully
+See [`examples/base_scenario.yaml`](https://github.com/sambaenergies/samba/blob/main/examples/base_scenario.yaml) for a fully
 annotated example.
 
 ---
@@ -429,7 +429,7 @@ where `total_emissions_kg` is computed from `diesel_generator.co2_per_liter_kg` 
 > to trace a cost-vs-emissions front. This is the **weighted-sum** method: it
 > recovers only points on the *convex hull* of the true Pareto frontier and
 > silently omits non-convex (concave) regions. Treat the output as an
-> approximation. See [Known Limitations](known-limitations.md#current-release-caveats-v30x).
+> approximation. See [Known Limitations](known-limitations.md#optimisation).
 
 ---
 

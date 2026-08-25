@@ -3,7 +3,7 @@
 This document describes what SAMBA does and does **not** model as of the current
 release (v5.3.0). It reflects features that have actually shipped — earlier
 releases deferred many items (EV, thermal, demand charges, bifacial PV, NSRDB
-fetch, …) that are now implemented; see the [CHANGELOG](../CHANGELOG.md) for the
+fetch, …) that are now implemented; see the [CHANGELOG](https://github.com/sambaenergies/samba/blob/main/CHANGELOG.md) for the
 per-version history.
 
 ---

@@ -21,7 +21,7 @@ SAMBA is built on a few deliberate choices:
 ## Scope
 
 SAMBA was built up in phased releases to avoid half-modelled features; all of the
-following are shipped as of v5.0.0. See the [CHANGELOG](../CHANGELOG.md) for the
+following are shipped as of v5.0.0. See the [CHANGELOG](https://github.com/sambaenergies/samba/blob/main/CHANGELOG.md) for the
 per-version history.
 
 **Electrical core:**
@@ -71,7 +71,7 @@ Each release is held to four quality gates:
 
 The electrical core (v1), extended electrical features (v2), thermal domain (v3),
 real-world-readiness features (v4), and the independence/relicensing milestone (v5)
-have all shipped. The [CHANGELOG](../CHANGELOG.md) records each release in detail.
+have all shipped. The [CHANGELOG](https://github.com/sambaenergies/samba/blob/main/CHANGELOG.md) records each release in detail.
 
 ## Validation Strategy
 
