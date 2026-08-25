@@ -12,7 +12,7 @@ docker run -p 8000:8000 -v "$PWD/data:/data" samba-service
 # API now at http://localhost:8000  (docs at /docs)
 ```
 
-The image (uv-based, see [`Dockerfile`](../Dockerfile)) enables the **persistent
+The image (uv-based, see [`Dockerfile`](https://github.com/sambaenergies/samba/blob/main/Dockerfile)) enables the **persistent
 job store** and writes results under `/data`, which is exposed as a volume so jobs
 and artifacts survive container restarts.
 

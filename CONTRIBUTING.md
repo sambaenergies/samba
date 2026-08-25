@@ -58,6 +58,31 @@ uv run mypy samba/
 just check
 ```
 
+## Docs
+
+User and developer documentation lives in `docs/` and is built with
+[Material for MkDocs](https://squidfunk.github.io/mkdocs-material/).
+
+```bash
+just docs-build    # mkdocs build --strict — what CI runs
+just docs-serve    # live-reload preview on http://127.0.0.1:8000
+```
+
+`--strict` turns every warning into a failure, and `mkdocs.yml` additionally
+promotes MkDocs' INFO-level diagnostics (missing heading anchors, links that
+leave the docs tree, pages absent from `nav`) to warnings. In practice:
+
+- **Adding a page** means adding it to `nav` in `mkdocs.yml`, or the build fails.
+- **Linking to a file outside `docs/`** (`../CHANGELOG.md`, `../Dockerfile`) fails
+  — those files are not part of the site. Use a full
+  `https://github.com/sambaenergies/samba/blob/main/…` URL instead.
+- **Linking to a `#heading-anchor`** that does not exist fails.
+
+`mkdocs.yml` does not publish anything. The public site
+(`docs.sambaenergies.com`) is built by the separate `sambaenergies/docs` repo,
+which aggregates `docs/` from every org repo; this config is what lets breakage
+be caught here, at the source. See epic #56.
+
 ## Service contract (OpenAPI + schemas)
 
 The backend Pydantic models are the single source of truth for every shape that
@@ -134,6 +159,8 @@ path filter). The jobs it gates:
   shape the UI consumes.
 - **`Contract breaking-change check`** — oasdiff fails a breaking `openapi.json`
   change unless `CONTRACT_VERSION` major was bumped.
+- **`Docs (mkdocs --strict)`** — builds `docs/` with every link, nav entry and
+  heading anchor validated. See [Docs](#docs).
 
 The `UI (just ui-check)` and `UI external-consumer build` jobs are **both** kept:
 the former is the same-tree drift gate, the latter proves self-containment — they
@@ -145,7 +172,12 @@ queue.
 **Docs-only path filtering.** A `changes` job detects when a PR touches only docs
 (`**.md`, `docs/**`, `LICENSE`); when so, the heavy jobs **skip** (saving the
 matrix) while `CI gate` still runs and passes — because branch protection requires
-only `CI gate`, the docs PR merges instantly. Adding a *new* required check means
+only `CI gate`, the docs PR merges quickly. Adding a *new* required check means
 adding it to `CI gate`'s `needs:` list, not to the branch-protection settings.
+
+`Docs (mkdocs --strict)` is the **inverse** filter — the one job a docs-only PR
+still runs. It also fires on `mkdocs.yml`, `pyproject.toml`, `uv.lock` and the
+`justfile`, so a dependency bump to a breaking MkDocs/Material release cannot
+skip the job that would catch it.
 
 > **Out of scope (deferred):** actual UI extraction and the desktop/registry product boundary are catalogued in [docs/deferred-extraction.md](docs/deferred-extraction.md).

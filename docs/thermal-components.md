@@ -437,4 +437,4 @@ objective:
 
 - [Scenario Reference](scenario-reference.md) — full YAML schema for v3 thermal keys
 - [Known Limitations](known-limitations.md) — thermal modelling scope
-- [Golden Scenarios g13–g19](../tests/goldens/) — regression benchmarks for all thermal components
+- [Golden Scenarios g13–g19](https://github.com/sambaenergies/samba/tree/main/tests/goldens) — regression benchmarks for all thermal components

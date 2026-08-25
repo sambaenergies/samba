@@ -54,6 +54,12 @@ dev = [
     "types-PyYAML",
     "pre-commit",
     "httpx>=0.24",
+    # Docs gate (#60): `just docs-build` runs `mkdocs build --strict` so a
+    # broken link/nav/anchor fails at the source, before it reaches the
+    # aggregated site. Material is the org-standard theme (epic #56), kept
+    # here so the local build previews what the aggregator will render.
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
 ]
 
 [project.scripts]

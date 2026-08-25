@@ -21,6 +21,7 @@ jobs:
     outputs:
       code: ${{ steps.detect.outputs.code }}
       rust: ${{ steps.detect.outputs.rust }}
+      docs: ${{ steps.detect.outputs.docs }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -32,6 +33,7 @@ jobs:
           if [ "${{ github.event_name }}" != "pull_request" ]; then
             echo "code=true" >> "$GITHUB_OUTPUT"
             echo "rust=true" >> "$GITHUB_OUTPUT"
+            echo "docs=true" >> "$GITHUB_OUTPUT"
             echo "Non-PR event (${{ github.event_name }}): running the full gate."
             exit 0
           fi
@@ -41,6 +43,7 @@ jobs:
           if [ -z "$changed" ]; then
             echo "code=true" >> "$GITHUB_OUTPUT"
             echo "rust=true" >> "$GITHUB_OUTPUT"
+            echo "docs=true" >> "$GITHUB_OUTPUT"
             echo "Empty diff -- running the full gate (fail-safe)."
             exit 0
           fi
@@ -63,6 +66,19 @@ jobs:
           else
             echo "rust=false" >> "$GITHUB_OUTPUT"
             echo "Nothing that affects the Tauri crate: Rust gate skips."
+          fi
+          # The docs gate is the INVERSE of `code`: it is the one job a
+          # docs-only PR must still run. Also fires on its own toolchain --
+          # mkdocs.yml (nav + validation settings), pyproject/uv.lock (the
+          # mkdocs + material pins; otherwise a Renovate bump to a breaking
+          # theme release would skip the very job that would catch it), the
+          # justfile (docs-build's body) and this workflow.
+          if echo "$changed" | grep -qE '^docs/|^mkdocs\.yml$|^pyproject\.toml$|^uv\.lock$|^justfile$|^\.github/workflows/ci\.yml$'; then
+            echo "docs=true" >> "$GITHUB_OUTPUT"
+            echo "Docs, mkdocs.yml or this workflow touched: running the docs gate."
+          else
+            echo "docs=false" >> "$GITHUB_OUTPUT"
+            echo "Nothing that affects the docs build: docs gate skips."
           fi
 
   check:
@@ -339,6 +355,26 @@ jobs:
         working-directory: ui/src-tauri
         run: cargo check --locked --all-targets
 
+  docs:
+    name: Docs (mkdocs --strict)
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: just docs-build
+        run: uvx --from rust-just just docs-build
+
   ci-gate:
     # The single required status check. It ALWAYS runs (no path gate) so it always
     # reports, and it passes only when every upstream job either succeeded or was
@@ -349,7 +385,7 @@ jobs:
     name: CI gate
     runs-on: ubuntu-latest
     if: always()
-    needs: [changes, check, test, ui, ui-external, compat-ui, contract-breaking, rust]
+    needs: [changes, check, test, ui, ui-external, compat-ui, contract-breaking, rust, docs]
     steps:
       - name: Require all upstream jobs to succeed or skip
         run: |
@@ -369,6 +405,7 @@ jobs:
           check_result compat-ui        '${{ needs.compat-ui.result }}'
           check_result contract-breaking '${{ needs.contract-breaking.result }}'
           check_result rust             '${{ needs.rust.result }}'
+          check_result docs             '${{ needs.docs.result }}'
           if [ "$fail" -ne 0 ]; then
             echo "CI gate: FAILED"
             exit 1

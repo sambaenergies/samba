@@ -56,6 +56,16 @@ ui-check:
     cd ui && npx vue-tsc --noEmit
     cd ui && npm run test
 
+# Build the docs with link/nav/anchor validation. `--strict` promotes every
+# warning to an error, so a broken reference fails here rather than on the
+# aggregated site. Output: site/ (gitignored).
+docs-build:
+    uv run mkdocs build --strict
+
+# Serve the docs locally with live reload (http://127.0.0.1:8000)
+docs-serve:
+    uv run mkdocs serve
+
 # Run the fast test suite (golden benchmarks deselected)
 test:
     uv run pytest

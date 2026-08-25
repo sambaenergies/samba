@@ -1,0 +1,62 @@
+# Validation-only MkDocs config.
+#
+# This does NOT publish a site. The published, aggregated site lives in
+# `sambaenergies/docs` (epic #56) and ingests this repo's `docs/` alongside
+# other org repos. This file exists so `docs/` can be built -- and therefore
+# link-checked -- at the source, before breakage reaches the aggregated site
+# (#60). `mkdocs-multirepo` reads each source repo's own mkdocs.yml, so the
+# `nav` below is also what the aggregator will render for the SAMBA section.
+#
+# Deliberately no `site_url`: the aggregator owns the published URL, and
+# hard-coding one here would bake in a guess about the final path layout.
+
+site_name: SAMBA
+site_description: >-
+  Systems Advisor for Microgrids & Building Analysis -- optimal sizing and
+  techno-economic analysis of hybrid energy systems.
+repo_url: https://github.com/sambaenergies/samba
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+
+# `docs/README.md` is GitHub's landing page when you browse into the `docs/`
+# directory -- not a page of the site, and it collides with `index.md`.
+exclude_docs: |
+  README.md
+
+# `--strict` turns WARNING into a build failure. These four are INFO by default,
+# which is how a broken anchor (`#current-release-caveats-v30x`, a section
+# deleted back in the v3 era) survived in scenario-reference.md unnoticed.
+# Promoting them is the point of the gate: without this, `--strict` catches
+# missing *files* but not missing *anchors* or unrunnable relative links.
+validation:
+  nav:
+    omitted_files: warn
+    not_found: warn
+    absolute_links: warn
+  links:
+    not_found: warn
+    anchors: warn
+    absolute_links: warn
+    unrecognized_links: warn
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Desktop App: desktop-app.md
+  - Reference:
+      - Scenario Reference: scenario-reference.md
+      - CLI Reference: cli-reference.md
+      - API Reference: api-reference.md
+      - Thermal Components: thermal-components.md
+  - Deployment: deployment.md
+  - Known Limitations: known-limitations.md
+  - Developer:
+      - Architecture: developer/architecture.md
+      - Domain Model: developer/domain-model.md
+      - Results Contract: developer/results-contract.md
+      - Deferred Extraction: deferred-extraction.md
+  - About:
+      - About SAMBA: about.md
+      - Acknowledgements: acknowledgements.md
