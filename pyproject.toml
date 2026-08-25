@@ -67,6 +67,36 @@ path = "samba/_version.py"
 [tool.hatch.build.targets.wheel]
 packages = ["samba", "samba_cli", "samba_service"]
 
+# Allowlist, not a denylist. Hatchling's default sdist ships everything the
+# ROOT .gitignore does not exclude -- and `node_modules` is ignored by the
+# nested ui/.gitignore, which hatchling never reads. A working tree therefore
+# produced a 38 MB sdist with 6334 node_modules entries, while a clean checkout
+# produced 1.5 MB. Listing what ships makes the sdist depend on the declared
+# contents rather than on the state of the tree it was built in.
+#
+# Contents: the three packages, plus the data the test suite reads by absolute
+# path (tests/unit/test_schema_export.py -> schemas/,
+# test_cop_dataset_example.py -> examples/, test_openapi_export.py ->
+# openapi.json, test_version_consistency.py -> CHANGELOG.md + CITATION.cff), so
+# the sdist stays test-runnable for downstream packagers. ui/, docs/, scripts/,
+# packaging/ and .github/ are deliberately out: none is needed to build, install
+# or test the Python package.
+[tool.hatch.build.targets.sdist]
+include = [
+  "/samba",
+  "/samba_cli",
+  "/samba_service",
+  "/tests",
+  "/schemas",
+  "/examples",
+  "/openapi.json",
+  "/CHANGELOG.md",
+  "/CITATION.cff",
+  "/README.md",
+  "/LICENSE",
+  "/pyproject.toml",
+]
+
 # ---------------------------------------------------------------------------
 # Ruff
 # ---------------------------------------------------------------------------
