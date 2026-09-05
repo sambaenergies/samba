@@ -282,7 +282,7 @@ jobs:
       - name: oasdiff breaking-change detection
         id: oasdiff
         continue-on-error: true
-        uses: oasdiff/oasdiff-action/breaking@v0.1.13
+        uses: oasdiff/oasdiff-action/breaking@v0.1.15
         with:
           base: base-openapi.json
           revision: openapi.json
