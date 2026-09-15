@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v10.0.1
+        uses: astral-sh/setup-uv@v10.1.0
         # No `enable-cache`: setup-uv v10's `auto` default disables caching for
         # tag/release events so a cache written by a less-trusted context cannot
         # influence a published artifact. Do not re-add it here.
