@@ -48,7 +48,7 @@ jobs:
       # playwright.config.ts declares a `webServer` that starts `npm run dev`
       # and waits on port 4173, so no separate serve step is needed. The specs
       # do not require the Python backend -- the app renders, and the failed
-      # API calls surface as unhandled rejections rather than test failures.
+      # API calls surface as store error state, not as test failures.
       - name: Run Playwright specs
         run: npx playwright test --reporter=list
         working-directory: ui

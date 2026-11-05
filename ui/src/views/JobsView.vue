@@ -51,6 +51,8 @@ watch(
       <RouterLink class="btn" to="/editor">Submit New Scenario</RouterLink>
     </header>
 
+    <p v-if="jobs.error" class="card text-sm text-red-600" role="alert">{{ jobs.error }}</p>
+
     <section class="card overflow-x-auto">
       <table class="min-w-full text-sm">
         <thead>
@@ -98,7 +100,7 @@ watch(
               <p v-if="job.error" class="mt-2 text-xs text-red-600">{{ job.error }}</p>
             </td>
           </tr>
-          <tr v-if="!sortedJobs.length">
+          <tr v-if="!sortedJobs.length && !jobs.error">
             <td colspan="5" class="px-2 py-6 text-center text-slate-500">No runs yet. Start by creating a scenario.</td>
           </tr>
         </tbody>
