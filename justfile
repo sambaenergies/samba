@@ -66,11 +66,15 @@ docs-build:
 docs-serve:
     uv run mkdocs serve
 
-# Run the fast test suite (golden benchmarks deselected)
+# Run the fast suite: skips benchmark, slow, integration and milp tests (~15 s)
+test-fast:
+    uv run pytest -m "not benchmark and not slow and not integration and not milp"
+
+# Run the full suite except golden benchmarks, slow solver tests included (~15-35 min)
 test:
     uv run pytest
 
-# Run golden scenario benchmarks (slow, ~15 min)
+# Run golden scenario benchmarks (~6-12 min)
 goldens:
     uv run pytest tests/goldens/ -m benchmark --tb=short -q
 

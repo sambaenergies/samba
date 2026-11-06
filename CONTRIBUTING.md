@@ -35,13 +35,32 @@ git add uv.lock
 
 ## Running Tests
 
-```bash
-uv run pytest          # or: just test
-```
+Tests carry markers (`pyproject.toml`): `slow`, `integration` and `milp` mark
+the tests that run the solver, and `benchmark` marks the golden scenarios. The
+default `pytest` run deselects only `benchmark`, so it includes every solver
+test.
+
+| Run | Selects | Tests | Local | CI |
+|---|---|---|---|---|
+| `just test-fast` | `not benchmark and not slow and not integration and not milp` | 845 | 13 s | — |
+| `just test` (= `uv run pytest`) | `not benchmark` | 985 | 15–18 min | 16–36 min per matrix job |
+| `just goldens` | `benchmark` (in `tests/goldens/`) | 35 | 6 min | 10–12 min |
+
+Use `just test-fast` while iterating, and `just test` before opening a PR,
+which is what the CI `Test` jobs run.
+
+"Local" is wall-clock time for a single serial run on one developer machine
+(16-thread laptop CPU, Python 3.14), at fc5b8b5: `just test` took 14 min 54 s
+on its own, and timing the subsets one by one with
+`uv run pytest -o addopts= -m "<expression>"` gave 13 s fast + 17 min 47 s
+slow, the two together being exactly the default selection. "CI" is the job
+durations of the `CI` run on `main` at fc5b8b5 and of the nightly `Goldens`
+runs. Expect your figures to differ, but not by an order of magnitude.
 
 ## Running Golden Scenario Regressions
 
-Golden benchmarks are excluded from the default `pytest` run (they take ~15 min).  Run them manually:
+Golden benchmarks are excluded from the default `pytest` run (about 6 min
+locally, 10–12 min in CI; see above). Run them manually:
 
 ```bash
 uv run pytest tests/goldens/ -m benchmark --tb=short -q    # or: just goldens
