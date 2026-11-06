@@ -91,7 +91,9 @@ function downloadYaml() {
 
 async function runScenario() {
   const runId = await jobs.submitCurrent();
-  await router.push("/jobs");
+  if (runId) {
+    await router.push("/jobs");
+  }
   return runId;
 }
 
@@ -126,6 +128,7 @@ watch(
         <button class="btn" @click="scenario.resetToDefaults">Reset</button>
         <button class="btn" :disabled="hasErrors || scenario.validationPending" @click="runScenario">Run</button>
       </div>
+      <p v-if="jobs.error" class="w-full text-sm text-red-600" role="alert">{{ jobs.error }}</p>
     </header>
 
     <div class="flex gap-4">

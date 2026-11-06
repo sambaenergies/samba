@@ -29,6 +29,7 @@ const jobs = useJobsStore();
           — {{ job.status }}
         </li>
       </ul>
+      <p v-else-if="jobs.error" class="text-sm text-red-600">{{ jobs.error }}</p>
       <p v-else class="text-sm text-slate-500">No jobs yet.</p>
       <div class="mt-4 flex gap-2">
         <RouterLink class="btn" to="/editor">New Scenario</RouterLink>

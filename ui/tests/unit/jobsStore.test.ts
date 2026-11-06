@@ -77,14 +77,15 @@ describe("jobs store", () => {
     expect(store.list.map((j) => j.run_id)).toEqual(["r2"]);
   });
 
-  it("remove leaves the list alone when the delete fails", async () => {
+  it("remove leaves the list alone and reports the error when the delete fails", async () => {
     listJobsMock.mockResolvedValue([job("r1", "completed")]);
     deleteJobMock.mockRejectedValue(new Error("boom"));
     const store = useJobsStore();
     await store.refresh();
 
-    await expect(store.remove("r1")).rejects.toThrow("boom");
+    await expect(store.remove("r1")).resolves.toBeUndefined();
     expect(store.list.map((j) => j.run_id)).toEqual(["r1"]);
+    expect(store.error).toBe("Could not delete run r1: boom");
   });
 
   it("submitCurrent submits the scenario draft, refreshes, and returns the run id", async () => {
@@ -102,19 +103,51 @@ describe("jobs store", () => {
     expect(store.list.map((j) => j.run_id)).toEqual(["new-run"]);
   });
 
-  it("refresh rejects when the API is unreachable, and leaves the list intact", async () => {
-    // Documents current behaviour, which is not defensive: `refresh` has no
-    // try/catch and AppShell.vue calls it as `void jobs.refresh()`, so a
-    // rejection here surfaces as an unhandled rejection rather than UI state.
-    // Tracked separately -- this test pins the behaviour so a fix is a visible
-    // change rather than a silent one.
+  it("submitCurrent reports the error and returns null when the submit fails", async () => {
+    submitJobMock.mockRejectedValue(new TypeError("Failed to fetch"));
+    const store = useJobsStore();
+
+    await expect(store.submitCurrent()).resolves.toBeNull();
+    expect(listJobsMock).not.toHaveBeenCalled();
+    expect(store.error).toBe("Could not submit the run: Failed to fetch");
+  });
+
+  it("submitCurrent still returns the run id when only the follow-up refresh fails", async () => {
+    // The run exists server side; reporting the submit as failed would invite a
+    // duplicate resubmission.
+    submitJobMock.mockResolvedValue({ run_id: "new-run" });
+    listJobsMock.mockRejectedValue(new TypeError("Failed to fetch"));
+    const store = useJobsStore();
+
+    await expect(store.submitCurrent()).resolves.toBe("new-run");
+    expect(store.error).toBe("Could not load jobs: Failed to fetch");
+  });
+
+  it("refresh does not reject when the API is unreachable: it keeps the list and reports the error", async () => {
+    // AppShell.vue calls `void jobs.refresh()` on every mount, which is before
+    // the sidecar is up on first launch. A rejection there is unhandled.
     listJobsMock.mockResolvedValue([job("r1", "completed")]);
     const store = useJobsStore();
     await store.refresh();
+    expect(store.error).toBeNull();
 
     listJobsMock.mockRejectedValue(new TypeError("Failed to fetch"));
 
-    await expect(store.refresh()).rejects.toThrow("Failed to fetch");
+    await expect(store.refresh()).resolves.toBeUndefined();
+    expect(store.list.map((j) => j.run_id)).toEqual(["r1"]);
+    expect(store.error).toBe("Could not load jobs: Failed to fetch");
+  });
+
+  it("a successful refresh clears a previous error", async () => {
+    listJobsMock.mockRejectedValue(new TypeError("Failed to fetch"));
+    const store = useJobsStore();
+    await store.refresh();
+    expect(store.error).not.toBeNull();
+
+    listJobsMock.mockResolvedValue([job("r1", "completed")]);
+    await store.refresh();
+
+    expect(store.error).toBeNull();
     expect(store.list.map((j) => j.run_id)).toEqual(["r1"]);
   });
 });
