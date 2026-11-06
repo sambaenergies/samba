@@ -11,6 +11,12 @@
       "matchManagers": ["npm"],
       "matchPackageNames": ["typescript"],
       "allowedVersions": "<7"
+    },
+    {
+      "description": "The Dockerfile's Python base image tracks the newest version the CI test matrix covers (3.11-3.14), not the newest release. uv.lock has no cp315 wheels for runtime dependencies including pandas, pyarrow, pydantic-core and highspy, so `uv sync --frozen` in the slim image would have to build them from source, and nothing in CI builds the image to catch it. Raise this cap together with the test matrix.",
+      "matchManagers": ["dockerfile"],
+      "matchDepNames": ["python"],
+      "allowedVersions": "<3.15"
     }
   ]
 }
